@@ -1,13 +1,14 @@
 import { createApp } from './app.js';
 import { env } from './config/env.js';
+import { logger } from './lib/logger.js';
 
 function main(): void {
   const app = createApp();
 
   app.listen(env.PORT, () => {
-    console.log(
-      `Escuchando en http://localhost:${env.PORT}` +
-        `  (NODE_ENV=${env.NODE_ENV}, API_PREFIX=${env.API_PREFIX})`,
+    logger.info(
+      { port: env.PORT, env: env.NODE_ENV, apiPrefix: env.API_PREFIX },
+      `escuchando en http://localhost:${env.PORT}`,
     );
   });
 }
