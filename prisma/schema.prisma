@@ -31,6 +31,17 @@ enum RouteState {
   Suspendida
 }
 
+enum AlertTone {
+  danger
+  warning
+}
+
+enum UserRole {
+  admin
+  operador
+  supervisor
+}
+
 model Consortium {
   id       String    @id @default(uuid())
   name     String    @unique
@@ -53,6 +64,9 @@ model Vehicle {
   currentRouteCode String?
   currentRoute     Route?  @relation("VehicleCurrentRoute", fields: [currentRouteCode], references: [code])
 
+  statuses VehicleStatus[]
+  alerts   Alert[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -72,6 +86,7 @@ model Route {
 
   stops    Stop[]
   vehicles Vehicle[] @relation("VehicleCurrentRoute")
+  alerts   Alert[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -91,6 +106,8 @@ model Stop {
   routeCode String
   route     Route  @relation(fields: [routeCode], references: [code], onDelete: Cascade)
 
+  nextForStatuses VehicleStatus[] @relation("NextStop")
+
   @@unique([routeCode, order])
   @@index([routeCode])
   @@map("stops")
@@ -100,8 +117,65 @@ model Driver {
   id            String @id @default(uuid())
   name          String
   licenseNumber String @unique
+  statuses VehicleStatus[]
 
   createdAt DateTime @default(now())
 
   @@map("drivers")
+}
+
+model VehicleStatus {
+  id         String   @id @default(uuid())
+  speedKmh   Int
+  passengers Int
+  capacity   Int
+  lat        Decimal  @db.Decimal(9, 6)
+  lng        Decimal  @db.Decimal(9, 6)
+  recordedAt DateTime @default(now())
+
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  driverId String?
+  driver   Driver? @relation(fields: [driverId], references: [id])
+
+  nextStopId String?
+  nextStop   Stop?   @relation("NextStop", fields: [nextStopId], references: [id])
+
+  @@index([vehicleId, recordedAt(sort: Desc)])
+  @@map("vehicle_statuses")
+}
+
+model Alert {
+  id    String    @id @default(uuid())
+  title String
+  text  String
+  tone  AlertTone
+
+  vehicleId String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
+
+  routeCode String?
+  route     Route?  @relation(fields: [routeCode], references: [code])
+
+  createdAt      DateTime  @default(now())
+  acknowledgedAt DateTime?
+
+  @@index([tone])
+  @@index([acknowledgedAt])
+  @@index([createdAt(sort: Desc)])
+  @@map("alerts")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(operador)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
 }
