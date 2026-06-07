@@ -6,3 +6,102 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+
+enum VehicleType {
+  BusArticulado @map("Bus Articulado")
+  Alimentador
+}
+
+enum VehicleState {
+  Operativo
+  EnTaller  @map("En Taller")
+  Alerta
+}
+
+enum RouteType {
+  Troncal
+  Expreso
+  Alimentador
+}
+
+enum RouteState {
+  Activa
+  EnRevision @map("En Revisión")
+  Suspendida
+}
+
+model Consortium {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  vehicles Vehicle[]
+
+  @@map("consortiums")
+}
+
+model Vehicle {
+  id                 String       @id
+  plate              String       @unique
+  type               VehicleType
+  km                 Int          @default(0)
+  state              VehicleState @default(Operativo)
+  lastInspectionDate DateTime     @db.Date
+
+  consortiumId String
+  consortium   Consortium @relation(fields: [consortiumId], references: [id])
+
+  currentRouteCode String?
+  currentRoute     Route?  @relation("VehicleCurrentRoute", fields: [currentRouteCode], references: [code])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([state])
+  @@index([consortiumId])
+  @@map("vehicles")
+}
+
+model Route {
+  code             String     @id
+  name             String
+  type             RouteType
+  lengthKm         Decimal    @db.Decimal(6, 2)
+  frequencyMinutes Int
+  busesAssigned    Int        @default(0)
+  state            RouteState @default(Activa)
+
+  stops    Stop[]
+  vehicles Vehicle[] @relation("VehicleCurrentRoute")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([state])
+  @@index([type])
+  @@map("routes")
+}
+
+model Stop {
+  id    String   @id @default(uuid())
+  name  String
+  order Int
+  lat   Decimal? @db.Decimal(9, 6)
+  lng   Decimal? @db.Decimal(9, 6)
+
+  routeCode String
+  route     Route  @relation(fields: [routeCode], references: [code], onDelete: Cascade)
+
+  @@unique([routeCode, order])
+  @@index([routeCode])
+  @@map("stops")
+}
+
+model Driver {
+  id            String @id @default(uuid())
+  name          String
+  licenseNumber String @unique
+
+  createdAt DateTime @default(now())
+
+  @@map("drivers")
+}
