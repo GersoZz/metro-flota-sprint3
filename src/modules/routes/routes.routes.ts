@@ -16,6 +16,8 @@ import {
   routesSummaryHandler,
   updateRouteHandler,
 } from './routes.controller.js';
+import { createStopSchema } from '../stops/stops.schema.js';
+import { createStopHandler } from '../stops/stops.controller.js';
 
 export const routesRouter: Router = Router();
 
@@ -30,6 +32,11 @@ routesRouter.get(
   '/:code/stops',
   validate({ params: routeCodeParamSchema }),
   asyncHandler(getRouteStopsHandler),
+);
+routesRouter.post(
+  '/:code/stops',
+  validate({ params: routeCodeParamSchema, body: createStopSchema }),
+  asyncHandler(createStopHandler),
 );
 routesRouter.patch(
   '/:code',
