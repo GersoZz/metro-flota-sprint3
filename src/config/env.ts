@@ -16,6 +16,8 @@ const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL: z.string().default('7d'),
   COOKIE_SECRET: z.string().min(16).optional(),
+  TELEMETRY_SIM: z.enum(['true', 'false']).default('false'),
+  TELEMETRY_SIM_INTERVAL_MS: z.coerce.number().int().positive().default(3000),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -33,3 +35,4 @@ export type Env = typeof env;
 
 export const isProduction = env.NODE_ENV === 'production';
 export const isTest = env.NODE_ENV === 'test';
+export const telemetrySimEnabled = env.TELEMETRY_SIM === 'true';
