@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 import { AppError } from '../lib/AppError.js';
 import { logger } from '../lib/logger.js';
 import { isProduction } from '../config/env.js';
+import { Prisma } from '../generated/prisma/client.js';
 
 interface ErrorBody {
   error: {
@@ -38,6 +39,25 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res: Response, _nex
       error: { code: err.code, message: err.message, details: err.details },
     } satisfies ErrorBody);
     return;
+  }
+
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === 'P2025') {
+      res.status(404).json({
+        error: { code: 'NOT_FOUND', message: 'Recurso no encontrado' },
+      } satisfies ErrorBody);
+      return;
+    }
+    if (err.code === 'P2002') {
+      const target = (err.meta?.target as string[] | undefined)?.join(', ');
+      res.status(409).json({
+        error: {
+          code: 'CONFLICT',
+          message: target ? `Valor duplicado en: ${target}` : 'Valor duplicado',
+        },
+      } satisfies ErrorBody);
+      return;
+    }
   }
 
   logger.error({ err }, 'Error no controlado');
