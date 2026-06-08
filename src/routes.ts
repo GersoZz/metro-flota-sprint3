@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { vehiclesRouter } from './modules/vehicles/vehicles.routes.js';
+import { routesRouter } from './modules/routes/routes.routes.js';
 
 export const apiRouter: Router = Router();
 
@@ -8,3 +9,4 @@ apiRouter.get('/', (_req, res) => {
 });
 
 apiRouter.use('/vehicles', vehiclesRouter);
+apiRouter.use('/routes', routesRouter);
