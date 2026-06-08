@@ -1,7 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../lib/AppError.js';
 import { verifyPassword } from './password.js';
-import { signAccessToken, signRefreshToken } from './tokens.js';
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from './tokens.js';
 
 export interface UserDTO {
   id: string;
@@ -34,4 +34,26 @@ export async function login(email: string, password: string): Promise<LoginResul
     accessToken: signAccessToken(tokenUser),
     refreshToken: signRefreshToken(tokenUser),
   };
+}
+
+export async function refresh(
+  refreshToken: string,
+): Promise<{ accessToken: string; refreshToken: string }> {
+  let sub: string;
+  try {
+    sub = verifyRefreshToken(refreshToken).sub;
+  } catch {
+    throw AppError.unauthorized('Refresh token inválido o expirado');
+  }
+  const user = await prisma.user.findUnique({ where: { id: sub } });
+  if (!user) throw AppError.unauthorized('Refresh token inválido o expirado');
+
+  const tokenUser = { id: user.id, role: user.role };
+  return { accessToken: signAccessToken(tokenUser), refreshToken: signRefreshToken(tokenUser) };
+}
+
+export async function getMe(userId: string): Promise<UserDTO> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw AppError.unauthorized('No autenticado');
+  return toUserDTO(user);
 }
