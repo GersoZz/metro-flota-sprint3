@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { validate } from '../../middlewares/validate.js';
 import { asyncHandler } from '../../lib/asyncHandler.js';
+import { requireRole } from '../../middlewares/requireRole.js';
+import { WRITE_ROLES } from '../../lib/rbac.js';
 import {
   createVehicleSchema,
   listVehiclesQuerySchema,
@@ -23,7 +25,12 @@ vehiclesRouter.get(
   asyncHandler(listVehiclesHandler),
 );
 
-vehiclesRouter.post('/', validate({ body: createVehicleSchema }), asyncHandler(createVehicleHandler));
+vehiclesRouter.post(
+  '/',
+  requireRole(...WRITE_ROLES),
+  validate({ body: createVehicleSchema }),
+  asyncHandler(createVehicleHandler),
+);
 
 vehiclesRouter.get(
   '/:id',
@@ -33,12 +40,14 @@ vehiclesRouter.get(
 
 vehiclesRouter.patch(
   '/:id',
+  requireRole(...WRITE_ROLES),
   validate({ params: vehicleIdParamSchema, body: updateVehicleSchema }),
   asyncHandler(updateVehicleHandler),
 );
 
 vehiclesRouter.delete(
   '/:id',
+  requireRole(...WRITE_ROLES),
   validate({ params: vehicleIdParamSchema }),
   asyncHandler(deleteVehicleHandler),
 );
