@@ -24,4 +24,4 @@ apiRouter.use('/consortiums', authenticate, consortiumsRouter);
 apiRouter.use('/drivers', authenticate, driversRouter);
 apiRouter.use('/alerts', authenticate, alertsRouter);
 apiRouter.use('/dashboard', authenticate, dashboardRouter);
-apiRouter.use('/monitoring', authenticate, monitoringRouter);
+apiRouter.use('/monitoring', monitoringRouter);
