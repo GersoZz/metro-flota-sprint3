@@ -1,4 +1,5 @@
 import { prisma } from '../src/lib/prisma.js';
+import { hashPassword } from '../src/modules/auth/password.js';
 
 const vehicleType = {
   'Bus Articulado': 'BusArticulado',
@@ -429,13 +430,16 @@ async function main(): Promise<void> {
   }
 
   // Usuario admin
+  const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@metroflota.gob.pe';
+  const adminPassword = process.env.ADMIN_PASSWORD ?? 'admin1234';
+  const passwordHash = await hashPassword(adminPassword);
   await prisma.user.upsert({
-    where: { email: 'admin@metroflota.gob.pe' },
-    update: {},
+    where: { email: adminEmail },
+    update: { passwordHash },
     create: {
       name: 'Administrador',
-      email: 'admin@metroflota.gob.pe',
-      passwordHash: 'PLACEHOLDER_SET_IN_C3_ARGON2',
+      email: adminEmail,
+      passwordHash,
       role: 'admin',
     },
   });
