@@ -5,6 +5,7 @@ import { stopsRouter } from './modules/stops/stops.routes.js';
 import { consortiumsRouter } from './modules/consortiums/consortiums.routes.js';
 import { driversRouter } from './modules/drivers/drivers.routes.js';
 import { alertsRouter } from './modules/alerts/alerts.routes.js';
+import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 
 export const apiRouter: Router = Router();
 
@@ -18,3 +19,4 @@ apiRouter.use('/stops', stopsRouter);
 apiRouter.use('/consortiums', consortiumsRouter);
 apiRouter.use('/drivers', driversRouter);
 apiRouter.use('/alerts', alertsRouter);
+apiRouter.use('/dashboard', dashboardRouter);
