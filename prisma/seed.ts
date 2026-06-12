@@ -254,6 +254,82 @@ const namedStops: Record<string, { name: string; lat: number; lng: number }> = {
   'TR-B:3': { name: 'Estación UNI', lat: -12.0246, lng: -77.0556 },
 };
 
+type RealStation = { orden: number; nombre: string; lat: number; lon: number };
+type RealRoute = { code: string; ruta: string; nombre: string; recorrido: string; estaciones: RealStation[] };
+
+const realRoutes: RealRoute[] = [
+  {
+    code: 'MET-A',
+    ruta: 'A',
+    nombre: 'Ruta A',
+    recorrido: 'Terminal Naranjal - Estación Central',
+    estaciones: [
+      { orden: 1, nombre: 'Terminal Naranjal', lat: -11.98264, lon: -77.0587 },
+      { orden: 2, nombre: 'Izaguirre', lat: -11.98961, lon: -77.05704 },
+      { orden: 3, nombre: 'Pacífico', lat: -11.99476, lon: -77.05607 },
+      { orden: 4, nombre: 'Independencia', lat: -11.9985, lon: -77.05523 },
+      { orden: 5, nombre: 'Los Jazmines', lat: -12.0018, lon: -77.0548 },
+      { orden: 6, nombre: 'Tomás Valle', lat: -12.00615, lon: -77.05405 },
+      { orden: 7, nombre: 'El Milagro', lat: -12.0117, lon: -77.05286 },
+      { orden: 8, nombre: 'Honorio Delgado', lat: -12.01825, lon: -77.0516 },
+      { orden: 9, nombre: 'UNI', lat: -12.0242, lon: -77.04887 },
+      { orden: 10, nombre: 'Parque del Trabajo', lat: -12.0304, lon: -77.04434 },
+      { orden: 11, nombre: 'Caquetá', lat: -12.03636, lon: -77.04366 },
+      { orden: 12, nombre: 'Ramón Castilla', lat: -12.04398, lon: -77.04148 },
+      { orden: 13, nombre: 'Tacna', lat: -12.04656, lon: -77.03714 },
+      { orden: 14, nombre: 'Jirón de la Unión', lat: -12.04948, lon: -77.03262 },
+      { orden: 15, nombre: 'Colmena', lat: -12.0524, lon: -77.03291 },
+      { orden: 16, nombre: 'Estación Central', lat: -12.0577, lon: -77.03595 },
+    ],
+  },
+  {
+    code: 'MET-B',
+    ruta: 'B',
+    nombre: 'Ruta B',
+    recorrido: 'Terminal Chimpu Ocllo - Estación Central',
+    estaciones: [
+      { orden: 1, nombre: 'Terminal Chimpu Ocllo', lat: -11.89639, lon: -77.03741 },
+      { orden: 2, nombre: 'Los Incas', lat: -11.91545, lon: -77.04805 },
+      { orden: 3, nombre: 'Andrés Belaunde', lat: -11.93505, lon: -77.0564 },
+      { orden: 4, nombre: '22 de Agosto', lat: -11.94665, lon: -77.06059 },
+      { orden: 5, nombre: 'Las Vegas', lat: -11.95489, lon: -77.05992 },
+      { orden: 6, nombre: 'Universidad', lat: -11.96279, lon: -77.06233 },
+      { orden: 7, nombre: 'Terminal Naranjal', lat: -11.98264, lon: -77.0587 },
+      { orden: 8, nombre: 'Izaguirre', lat: -11.98961, lon: -77.05704 },
+      { orden: 9, nombre: 'Pacífico', lat: -11.99476, lon: -77.05607 },
+      { orden: 10, nombre: 'Independencia', lat: -11.9985, lon: -77.05523 },
+      { orden: 11, nombre: 'Los Jazmines', lat: -12.0018, lon: -77.0548 },
+      { orden: 12, nombre: 'Tomás Valle', lat: -12.00615, lon: -77.05405 },
+      { orden: 13, nombre: 'El Milagro', lat: -12.0117, lon: -77.05286 },
+      { orden: 14, nombre: 'Honorio Delgado', lat: -12.01825, lon: -77.0516 },
+      { orden: 15, nombre: 'UNI', lat: -12.0242, lon: -77.04887 },
+      { orden: 16, nombre: 'Parque del Trabajo', lat: -12.0304, lon: -77.04434 },
+      { orden: 17, nombre: 'Caquetá', lat: -12.03636, lon: -77.04366 },
+      { orden: 18, nombre: 'Dos de Mayo', lat: -12.04744, lon: -77.04267 },
+      { orden: 19, nombre: 'Quilca', lat: -12.05192, lon: -77.04228 },
+      { orden: 20, nombre: 'España', lat: -12.05777, lon: -77.04173 },
+      { orden: 21, nombre: 'Estación Central', lat: -12.0577, lon: -77.03595 },
+    ],
+  },
+];
+
+const haversineKm = (a: RealStation, b: RealStation): number => {
+  const R = 6371;
+  const toRad = (d: number): number => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+};
+const routeLengthKm = (st: RealStation[]): number => {
+  let total = 0;
+  for (let i = 1; i < st.length; i++) total += haversineKm(st[i - 1]!, st[i]!);
+  return Math.round(total * 10) / 10;
+};
+
 async function main(): Promise<void> {
   // Consorcios
   const consortiumId = new Map<string, string>();
@@ -319,6 +395,37 @@ async function main(): Promise<void> {
     }
   }
 
+  // Rutas reales del Metropolitano 
+  for (const rr of realRoutes) {
+    const data = {
+      name: `${rr.nombre} — ${rr.recorrido}`,
+      type: 'Troncal' as const,
+      lengthKm: routeLengthKm(rr.estaciones),
+      frequencyMinutes: 5,
+      busesAssigned: rr.estaciones.length * 3,
+      state: 'Activa' as const,
+    };
+    await prisma.route.upsert({
+      where: { code: rr.code },
+      update: data,
+      create: { code: rr.code, ...data },
+    });
+
+    for (const st of rr.estaciones) {
+      await prisma.stop.upsert({
+        where: { routeCode_order: { routeCode: rr.code, order: st.orden } },
+        update: { name: st.nombre, lat: st.lat, lng: st.lon },
+        create: {
+          routeCode: rr.code,
+          order: st.orden,
+          name: st.nombre,
+          lat: st.lat,
+          lng: st.lon,
+        },
+      });
+    }
+  }
+
   // Vehículos
   for (const v of vehicleRows) {
     const data = {
@@ -336,10 +443,10 @@ async function main(): Promise<void> {
     });
   }
 
-  // Unidades monitoreadas
+  // Unidades monitoreadas (asignadas a las rutas reales del Metropolitano)
   const monitored = [
-    { id: 'U-4022', plate: 'MON-4022', km: 158_000 },
-    { id: 'U-208', plate: 'MON-0208', km: 96_500 },
+    { id: 'U-4022', plate: 'MON-4022', km: 158_000, routeCode: 'MET-A' },
+    { id: 'U-208', plate: 'MON-0208', km: 96_500, routeCode: 'MET-B' },
   ];
   for (const m of monitored) {
     const data = {
@@ -349,7 +456,7 @@ async function main(): Promise<void> {
       state: 'Operativo' as const,
       lastInspectionDate: parseDmy('15/02/2024'),
       consortiumId: consortiumId.get('Lima Vías Express')!,
-      currentRouteCode: 'TR-B',
+      currentRouteCode: m.routeCode,
     };
     await prisma.vehicle.upsert({
       where: { id: m.id },
@@ -359,11 +466,13 @@ async function main(): Promise<void> {
   }
 
   // 7) Telemetría
-  const trbStops = await prisma.stop.findMany({
-    where: { routeCode: 'TR-B', order: { in: [1, 2] } },
-    orderBy: { order: 'asc' },
-  });
-  const stopByOrder = new Map(trbStops.map((s) => [s.order, s]));
+  const stopFor = async (routeCode: string, order: number) =>
+    prisma.stop.findUnique({ where: { routeCode_order: { routeCode, order } } });
+
+  const metaPos = await stopFor('MET-A', 2); // Izaguirre
+  const metaNext = await stopFor('MET-A', 3); // Pacífico
+  const metbPos = await stopFor('MET-B', 2); // Los Incas
+  const metbNext = await stopFor('MET-B', 3); // Andrés Belaunde
 
   const statuses = [
     {
@@ -373,9 +482,9 @@ async function main(): Promise<void> {
       speedKmh: 64,
       capacity: 160,
       passengers: Math.round(0.65 * 160),
-      nextStopId: stopByOrder.get(1)?.id ?? null,
-      lat: -12.015,
-      lng: -77.051,
+      nextStopId: metaNext?.id ?? null,
+      lat: Number(metaPos?.lat ?? -11.98961),
+      lng: Number(metaPos?.lng ?? -77.05704),
     },
     {
       id: 'seed-st-U-208',
@@ -384,9 +493,9 @@ async function main(): Promise<void> {
       speedKmh: 52,
       capacity: 120,
       passengers: 60,
-      nextStopId: stopByOrder.get(2)?.id ?? null,
-      lat: -12.0205,
-      lng: -77.0538,
+      nextStopId: metbNext?.id ?? null,
+      lat: Number(metbPos?.lat ?? -11.91545),
+      lng: Number(metbPos?.lng ?? -77.04805),
     },
   ];
   for (const s of statuses) {
@@ -411,7 +520,7 @@ async function main(): Promise<void> {
       text: 'Congestión severa en Av. Principal. Retraso est. 15 min.',
       tone: 'warning' as const,
       vehicleId: null,
-      routeCode: 'TR-B',
+      routeCode: 'MET-B',
       createdAt: minutesAgo(28),
     },
     {

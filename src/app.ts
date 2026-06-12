@@ -32,7 +32,24 @@ export function createApp(): Express {
   app.use(cookieParser(env.COOKIE_SECRET));
 
   if (!isTest) {
-    app.use(pinoHttp({ logger }));
+    app.use(
+      pinoHttp({
+        logger,
+        customSuccessMessage: (req, res, responseTime) =>
+          `${req.method} ${req.url} ${res.statusCode} ${Math.round(responseTime)}ms`,
+        customErrorMessage: (req, res, err) =>
+          `${req.method} ${req.url} ${res.statusCode} ${err.message}`,
+        customLogLevel: (_req, res, err) => {
+          if (err || res.statusCode >= 500) return 'error';
+          if (res.statusCode >= 400) return 'warn';
+          return 'info';
+        },
+        serializers: {
+          req: () => undefined,
+          res: () => undefined,
+        },
+      }),
+    );
   }
 
   app.get('/health', (_req: Request, res: Response) => {
