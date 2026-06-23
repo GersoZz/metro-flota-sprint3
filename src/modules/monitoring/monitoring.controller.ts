@@ -6,7 +6,8 @@ import {
   listUnits,
 } from './monitoring.service.js';
 import { initSSE, sendEvent } from '../../realtime/sse.js';
-import { env } from '../../config/env.js';
+import { telemetryBus } from '../../realtime/TelemetryBus.js';
+import { SseObserver } from '../../realtime/observers/SseObserver.js';
 
 export async function listUnitsHandler(_req: Request, res: Response): Promise<void> {
   res.json(await listUnits());
@@ -35,14 +36,12 @@ export async function streamUnitHandler(req: Request, res: Response): Promise<vo
   initSSE(res);
   sendEvent(res, initial);
 
-  const interval = setInterval(() => {
-    getUnitStatus(id)
-      .then((status) => sendEvent(res, status))
-      .catch(() => {});
-  }, env.TELEMETRY_SIM_INTERVAL_MS);
+  // Hacemos una suscripción a la telemetría para recibir updates en tiempo real del vehículo
+  // Cada vez que se recibe un evento, se envía al cliente SSE.
+  const unsubscribe = telemetryBus.subscribe(id, new SseObserver(res));
 
   req.on('close', () => {
-    clearInterval(interval);
+    unsubscribe();
     res.end();
   });
 }

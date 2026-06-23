@@ -4,10 +4,13 @@ import { verifyAccessToken } from '../modules/auth/tokens.js';
 import { getUnitStatus, type VehicleStatusDTO } from '../modules/monitoring/monitoring.service.js';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
+import { telemetryBus } from './TelemetryBus.js';
+import { SocketObserver } from './observers/SocketObserver.js';
 
 interface SocketData {
   user: { id: string; role: string };
-  units: Set<string>;
+  // Para desuscribir el observador de este socket
+  units: Map<string, () => void>;
 }
 
 interface ServerToClientEvents {
@@ -26,36 +29,6 @@ type MetroSocketServer = Server<
   Record<string, never>,
   SocketData
 >;
-
-const room = (unitId: string): string => `unit:${unitId}`;
-
-const broadcasters = new Map<string, { timer: NodeJS.Timeout; subscribers: number }>();
-
-function acquireBroadcaster(io: MetroSocketServer, unitId: string): void {
-  const existing = broadcasters.get(unitId);
-  if (existing) {
-    existing.subscribers += 1;
-    return;
-  }
-  const timer = setInterval(() => {
-    getUnitStatus(unitId)
-      .then((status) => io.to(room(unitId)).emit('status', status))
-      .catch(() => {
-      });
-  }, env.TELEMETRY_SIM_INTERVAL_MS);
-  timer.unref?.();
-  broadcasters.set(unitId, { timer, subscribers: 1 });
-}
-
-function releaseBroadcaster(unitId: string): void {
-  const entry = broadcasters.get(unitId);
-  if (!entry) return;
-  entry.subscribers -= 1;
-  if (entry.subscribers <= 0) {
-    clearInterval(entry.timer);
-    broadcasters.delete(unitId);
-  }
-}
 
 const readUnitId = (payload: unknown): string | undefined => {
   const unitId = (payload as { unitId?: unknown } | undefined)?.unitId;
@@ -83,7 +56,7 @@ export function initSocket(httpServer: HttpServer): MetroSocketServer {
     try {
       const { sub, role } = verifyAccessToken(token);
       socket.data.user = { id: sub, role };
-      socket.data.units = new Set();
+      socket.data.units = new Map();
       next();
     } catch {
       next(new Error('unauthorized'));
@@ -97,11 +70,12 @@ export function initSocket(httpServer: HttpServer): MetroSocketServer {
         socket.emit('error', { message: 'unitId requerido' });
         return;
       }
+      if (socket.data.units.has(unitId)) return; // ya suscrito
       getUnitStatus(unitId)
-        .then(async (status) => {
-          await socket.join(room(unitId));
-          socket.data.units.add(unitId);
-          acquireBroadcaster(io, unitId);
+        .then((status) => {
+          // Este observador reenvía al cliente Socket.IO.
+          const unsubscribe = telemetryBus.subscribe(unitId, new SocketObserver(socket));
+          socket.data.units.set(unitId, unsubscribe);
           socket.emit('status', status);
         })
         .catch(() => socket.emit('error', { message: `Unidad sin telemetría: ${unitId}` }));
@@ -109,15 +83,16 @@ export function initSocket(httpServer: HttpServer): MetroSocketServer {
 
     socket.on('unsubscribe', (payload: unknown) => {
       const unitId = readUnitId(payload);
-      if (unitId && socket.data.units.has(unitId)) {
-        void socket.leave(room(unitId));
+      const unsubscribe = unitId ? socket.data.units.get(unitId) : undefined;
+      if (unitId && unsubscribe) {
+        unsubscribe();
         socket.data.units.delete(unitId);
-        releaseBroadcaster(unitId);
       }
     });
 
     socket.on('disconnect', () => {
-      for (const unitId of socket.data.units) releaseBroadcaster(unitId);
+      for (const unsubscribe of socket.data.units.values()) unsubscribe();
+      socket.data.units.clear();
     });
   });
 

@@ -1,5 +1,7 @@
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
+import { telemetryBus } from './TelemetryBus.js';
+import { getUnitStatus } from '../modules/monitoring/monitoring.service.js';
 
 const STEP = 0.25;
 const ARRIVAL_EPS = 0.0005;
@@ -58,6 +60,11 @@ export async function tickUnit(unitId: string): Promise<boolean> {
     where: { id: status.id },
     data: { lat, lng, nextStopId, speedKmh: randomSpeed(), passengers, recordedAt: new Date() },
   });
+
+  // Publica el nuevo estado al bus sólo si hay observadores escuchando esta unidad
+  if (telemetryBus.hasObservers(unitId)) {
+    telemetryBus.publish(unitId, await getUnitStatus(unitId));
+  }
   return true;
 }
 
