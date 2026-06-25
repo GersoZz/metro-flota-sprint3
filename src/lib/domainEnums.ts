@@ -26,11 +26,13 @@ function invert<K extends string, V extends string>(map: Record<K, V>): Record<V
 }
 
 export const vehicleTypeFromDisplay = invert(vehicleTypeToDisplay);
+// { Operativo: 'Operativo', 'En Taller': 'EnTaller', Alerta: 'Alerta' }
 export const vehicleStateFromDisplay = invert(vehicleStateToDisplay);
 export const routeTypeFromDisplay = invert(routeTypeToDisplay);
 export const routeStateFromDisplay = invert(routeStateToDisplay);
 
 export const vehicleTypeDisplays = Object.values(vehicleTypeToDisplay);
+// [ 'Operativo', 'En Taller', 'Alerta' ]
 export const vehicleStateDisplays = Object.values(vehicleStateToDisplay);
 export const routeTypeDisplays = Object.values(routeTypeToDisplay);
 export const routeStateDisplays = Object.values(routeStateToDisplay);

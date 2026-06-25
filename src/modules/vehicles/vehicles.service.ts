@@ -13,6 +13,7 @@ import {
   vehicleTypeToDisplay,
 } from '../../lib/domainEnums.js';
 import { AppError } from '../../lib/AppError.js';
+import { stateFromDisplay, stateFromInternal } from './state/VehicleStateFactory.js';
 import type {
   CreateVehicleBody,
   ListVehiclesQuery,
@@ -143,6 +144,13 @@ export async function updateVehicle(id: string, body: UpdateVehicleBody): Promis
     data.type = vehicleTypeFromDisplay[body.type as keyof typeof vehicleTypeFromDisplay];
   }
   if (body.state !== undefined) {
+    const current = await prisma.vehicle.findUnique({ where: { id }, select: { state: true } });
+    if (!current) throw AppError.notFound(`Unidad no encontrada: ${id}`);
+
+    const from = stateFromInternal(current.state); // estado actual como objeto State
+    const to = stateFromDisplay(body.state); // estado pedido
+    from.assertTo(to); // <- si la transición es inválida lanza un error 409 Conflict
+
     data.state = vehicleStateFromDisplay[body.state as keyof typeof vehicleStateFromDisplay];
   }
   if (body.currentRouteCode !== undefined) {
