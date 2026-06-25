@@ -36,3 +36,16 @@ export const vehicleTypeDisplays = Object.values(vehicleTypeToDisplay);
 export const vehicleStateDisplays = Object.values(vehicleStateToDisplay);
 export const routeTypeDisplays = Object.values(routeTypeToDisplay);
 export const routeStateDisplays = Object.values(routeStateToDisplay);
+
+// Retorna el identificador interno cuyo display contiene `text` (case-insensitive)
+// o `undefined` si ninguno coincide
+export function matchEnumDisplay<K extends string>(
+  map: Record<K, string>,
+  text: string,
+): K | undefined {
+  const t = text.toLowerCase();
+  const entry = (Object.entries(map) as [K, string][]).find(([, display]) =>
+    display.toLowerCase().includes(t),
+  );
+  return entry?.[0];
+}

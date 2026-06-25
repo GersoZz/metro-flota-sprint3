@@ -14,6 +14,7 @@ import {
 } from '../../lib/domainEnums.js';
 import { AppError } from '../../lib/AppError.js';
 import { stateFromDisplay, stateFromInternal } from './state/VehicleStateFactory.js';
+import { vehicleFilters } from './filters/vehicleFilters.js';
 import type {
   CreateVehicleBody,
   ListVehiclesQuery,
@@ -44,49 +45,9 @@ function toVehicleDTO(v: VehicleRow): VehicleDTO {
   };
 }
 
-function buildWhere(query: ListVehiclesQuery): Prisma.VehicleWhereInput {
-  const and: Prisma.VehicleWhereInput[] = [];
-
-  if (query.state) {
-    and.push({ state: vehicleStateFromDisplay[query.state as keyof typeof vehicleStateFromDisplay] });
-  }
-  if (query.type) {
-    and.push({ type: vehicleTypeFromDisplay[query.type as keyof typeof vehicleTypeFromDisplay] });
-  }
-  if (query.consortium) and.push({ consortium: { name: { equals: query.consortium } } });
-
-  if (query.search) {
-    const s = query.search;
-    const or: Prisma.VehicleWhereInput[] = [
-      { plate: { contains: s, mode: 'insensitive' } },
-      { id: { contains: s, mode: 'insensitive' } },
-      { consortium: { name: { contains: s, mode: 'insensitive' } } },
-    ];
-
-    const stateId = matchEnumDisplay(vehicleStateToDisplay, s);
-    if (stateId) or.push({ state: stateId });
-    const typeId = matchEnumDisplay(vehicleTypeToDisplay, s);
-    if (typeId) or.push({ type: typeId });
-    and.push({ OR: or });
-  }
-
-  return and.length > 0 ? { AND: and } : {};
-}
-
-function matchEnumDisplay<K extends string>(
-  map: Record<K, string>,
-  text: string,
-): K | undefined {
-  const t = text.toLowerCase();
-  const entry = (Object.entries(map) as [K, string][]).find(([, display]) =>
-    display.toLowerCase().includes(t),
-  );
-  return entry?.[0];
-}
-
 export async function listVehicles(query: ListVehiclesQuery) {
   const pagination: Pagination = paginationQuerySchema.parse(query);
-  const where = buildWhere(query);
+  const where = vehicleFilters.build(query);
 
   const [rows, total] = await Promise.all([
     prisma.vehicle.findMany({
