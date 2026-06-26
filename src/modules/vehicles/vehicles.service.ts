@@ -8,42 +8,18 @@ import {
 } from '../../lib/pagination.js';
 import {
   vehicleStateFromDisplay,
-  vehicleStateToDisplay,
   vehicleTypeFromDisplay,
-  vehicleTypeToDisplay,
 } from '../../lib/domainEnums.js';
 import { AppError } from '../../lib/AppError.js';
 import { stateFromDisplay, stateFromInternal } from './state/VehicleStateFactory.js';
 import { vehicleFilters } from './filters/vehicleFilters.js';
+import { vehicleFactory } from './VehicleFactory.js';
 import type {
   CreateVehicleBody,
   ListVehiclesQuery,
   UpdateVehicleBody,
 } from './vehicles.schema.js';
-
-type VehicleRow = Prisma.VehicleGetPayload<{ include: { consortium: true } }>;
-
-export interface VehicleDTO {
-  id: string;
-  plate: string;
-  type: string;
-  consortium: string;
-  km: number;
-  state: string;
-  lastInspectionDate: string;
-}
-
-function toVehicleDTO(v: VehicleRow): VehicleDTO {
-  return {
-    id: v.id,
-    plate: v.plate,
-    type: vehicleTypeToDisplay[v.type],
-    consortium: v.consortium.name,
-    km: v.km,
-    state: vehicleStateToDisplay[v.state],
-    lastInspectionDate: v.lastInspectionDate.toISOString().slice(0, 10),
-  };
-}
+import type { VehicleDTO } from './vehicles.types.js';
 
 export async function listVehicles(query: ListVehiclesQuery) {
   const pagination: Pagination = paginationQuerySchema.parse(query);
@@ -59,7 +35,7 @@ export async function listVehicles(query: ListVehiclesQuery) {
     prisma.vehicle.count({ where }),
   ]);
 
-  return paginated(rows.map(toVehicleDTO), total, pagination);
+  return paginated(vehicleFactory.many(rows), total, pagination);
 }
 
 export async function getVehicle(id: string): Promise<VehicleDTO> {
@@ -68,7 +44,7 @@ export async function getVehicle(id: string): Promise<VehicleDTO> {
     include: { consortium: true },
   });
   if (!vehicle) throw AppError.notFound(`Unidad no encontrada: ${id}`);
-  return toVehicleDTO(vehicle);
+  return vehicleFactory.create(vehicle);
 }
 
 /** Resuelve el consorcio por nombre → id (400 si no existe). */
@@ -93,7 +69,7 @@ export async function createVehicle(body: CreateVehicleBody): Promise<VehicleDTO
     },
     include: { consortium: true },
   });
-  return toVehicleDTO(created);
+  return vehicleFactory.create(created);
 }
 
 export async function updateVehicle(id: string, body: UpdateVehicleBody): Promise<VehicleDTO> {
@@ -128,7 +104,7 @@ export async function updateVehicle(id: string, body: UpdateVehicleBody): Promis
     data,
     include: { consortium: true },
   });
-  return toVehicleDTO(updated);
+  return vehicleFactory.create(updated);
 }
 
 export async function deleteVehicle(id: string): Promise<void> {

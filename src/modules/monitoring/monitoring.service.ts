@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../lib/AppError.js';
+import { unitStatusFactory } from './UnitStatusFactory.js';
 
 export interface MonitoringUnit {
   id: string;
@@ -34,16 +35,7 @@ export async function getUnitStatus(id: string): Promise<VehicleStatusDTO> {
   });
   if (!status) throw AppError.notFound(`Unidad sin telemetría: ${id}`);
 
-  return {
-    unitId: status.vehicleId,
-    speedKmh: status.speedKmh,
-    driver: status.driver?.name ?? null,
-    passengers: status.passengers,
-    capacity: status.capacity,
-    nextStop: status.nextStop?.name ?? null,
-    routeCode: status.vehicle.currentRouteCode,
-    position: { lat: Number(status.lat), lng: Number(status.lng) },
-  };
+  return unitStatusFactory.create(status);
 }
 
 async function latestStatusOrThrow(id: string) {
