@@ -8,6 +8,7 @@ import { alertsRouter } from './modules/alerts/alerts.routes.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { monitoringRouter } from './modules/monitoring/monitoring.routes.js';
+import { gtfsRouter } from './modules/gtfs/gtfs.routes.js';
 import { authenticate } from './middlewares/authenticate.js';
 
 export const apiRouter: Router = Router();
@@ -25,3 +26,4 @@ apiRouter.use('/drivers', authenticate, driversRouter);
 apiRouter.use('/alerts', authenticate, alertsRouter);
 apiRouter.use('/dashboard', authenticate, dashboardRouter);
 apiRouter.use('/monitoring', monitoringRouter);
+apiRouter.use('/gtfs', authenticate, gtfsRouter);
