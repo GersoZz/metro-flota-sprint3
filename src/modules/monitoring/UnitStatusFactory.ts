@@ -1,26 +1,12 @@
-import type { Prisma } from '../../generated/prisma/client.js';
 import { DtoFactory } from '../../lib/DtoFactory.js';
-import type { VehicleStatusDTO } from './monitoring.service.js';
+import { UnitStatusAdapter, type VehicleStatusRow } from './UnitStatusAdapter.js';
+import type { VehicleStatusDTO } from './monitoring.types.js';
 
-// Fila de Prisma de VehicleStatus
-export type VehicleStatusRow = Prisma.VehicleStatusGetPayload<{
-  include: { driver: true; nextStop: true; vehicle: true };
-}>;
-
-// Rol Creator concreto
-// Construye el DTO de telemetría a partir de la fila de Prisma
+// Rol Creator concreto: decide qué adaptador instanciar para producir el DTO de telemetría.
+// El Factory Method elige el adaptador; el Adapter encapsula cómo se traduce la fila.
 export class UnitStatusFactory extends DtoFactory<VehicleStatusRow, VehicleStatusDTO> {
   create(status: VehicleStatusRow): VehicleStatusDTO {
-    return {
-      unitId: status.vehicleId,
-      speedKmh: status.speedKmh,
-      driver: status.driver?.name ?? null,
-      passengers: status.passengers,
-      capacity: status.capacity,
-      nextStop: status.nextStop?.name ?? null,
-      routeCode: status.vehicle.currentRouteCode,
-      position: { lat: Number(status.lat), lng: Number(status.lng) },
-    };
+    return new UnitStatusAdapter(status).toApi();
   }
 }
 

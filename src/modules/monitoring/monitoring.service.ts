@@ -1,11 +1,8 @@
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../lib/AppError.js';
 import { unitStatusFactory } from './UnitStatusFactory.js';
-
-export interface MonitoringUnit {
-  id: string;
-  label: string;
-}
+import type { MonitoringUnit, VehicleStatusDTO } from './monitoring.types.js';
+export type { MonitoringUnit, VehicleStatusDTO } from './monitoring.types.js';
 
 export async function listUnits(): Promise<MonitoringUnit[]> {
   const units = await prisma.vehicle.findMany({
@@ -14,17 +11,6 @@ export async function listUnits(): Promise<MonitoringUnit[]> {
     orderBy: { id: 'asc' },
   });
   return units.map((u) => ({ id: u.id, label: u.id }));
-}
-
-export interface VehicleStatusDTO {
-  unitId: string;
-  speedKmh: number;
-  driver: string | null;
-  passengers: number;
-  capacity: number;
-  nextStop: string | null;
-  routeCode: string | null;
-  position: { lat: number; lng: number };
 }
 
 export async function getUnitStatus(id: string): Promise<VehicleStatusDTO> {
