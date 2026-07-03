@@ -42,6 +42,17 @@ enum UserRole {
   supervisor
 }
 
+enum MaintenanceType {
+  Preventivo
+  Correctivo
+}
+
+enum MaintenanceStatus {
+  Programado
+  EnCurso    @map("En Curso")
+  Completado
+}
+
 model Consortium {
   id       String    @id @default(uuid())
   name     String    @unique
@@ -64,8 +75,9 @@ model Vehicle {
   currentRouteCode String?
   currentRoute     Route?  @relation("VehicleCurrentRoute", fields: [currentRouteCode], references: [code])
 
-  statuses VehicleStatus[]
-  alerts   Alert[]
+  statuses     VehicleStatus[]
+  alerts       Alert[]
+  maintenances Maintenance[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -166,6 +178,35 @@ model Alert {
   @@index([acknowledgedAt])
   @@index([createdAt(sort: Desc)])
   @@map("alerts")
+}
+
+// Orden de mantenimiento de un vehiculo (modulo M4 del SRS, RF-17 a RF-21).
+model Maintenance {
+  id          String            @id @default(uuid())
+  type        MaintenanceType
+  status      MaintenanceStatus @default(Programado)
+  description String
+
+  // Umbral del mantenimiento preventivo: se programa por kilometraje o por fecha.
+  thresholdKm   Int?
+  scheduledDate DateTime? @db.Date
+
+  // Datos que se llenan cuando el mantenimiento se ejecuta (RF-19).
+  executedDate DateTime? @db.Date
+  components   String?
+  costEstimate Decimal?  @db.Decimal(10, 2)
+  hours        Decimal?  @db.Decimal(6, 2)
+  technician   String?
+
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vehicleId, createdAt(sort: Desc)])
+  @@index([status])
+  @@map("maintenances")
 }
 
 model User {
