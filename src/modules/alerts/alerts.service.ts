@@ -66,3 +66,15 @@ export async function acknowledgeAlert(id: string): Promise<AlertDTO> {
   });
   return toAlertDTO(updated);
 }
+
+export async function unacknowledgeAlert(id: string): Promise<AlertDTO> {
+  const alert = await prisma.alert.findUnique({ where: { id } });
+  if (!alert) throw AppError.notFound(`Alerta no encontrada: ${id}`);
+  if (!alert.acknowledgedAt) return toAlertDTO(alert);
+
+  const updated = await prisma.alert.update({
+    where: { id },
+    data: { acknowledgedAt: null },
+  });
+  return toAlertDTO(updated);
+}

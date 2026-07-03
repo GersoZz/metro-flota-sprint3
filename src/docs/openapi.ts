@@ -233,6 +233,14 @@ export const openapiDocument = {
         responses: { 200: { description: 'Alerta', content: json('Alert') }, 403: errorResponse('Rol insuficiente'), 404: errorResponse('No encontrada') },
       },
     },
+    '/alerts/{id}/unacknowledge': {
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      patch: {
+        tags: ['Alertas'],
+        summary: 'Revertir a no atendida (admin/operador/supervisor)',
+        responses: { 200: { description: 'Alerta', content: json('Alert') }, 403: errorResponse('Rol insuficiente'), 404: errorResponse('No encontrada') },
+      },
+    },
 
     '/dashboard/kpis': {
       get: { tags: ['Dashboard'], summary: 'KPIs de cabecera', responses: { 200: { description: 'KPIs', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Kpi' } } } } } } },

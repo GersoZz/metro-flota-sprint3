@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { validate } from '../../middlewares/validate.js';
 import { asyncHandler } from '../../lib/asyncHandler.js';
 import { alertIdParamSchema, listAlertsQuerySchema } from './alerts.schema.js';
-import { acknowledgeAlertHandler, listAlertsHandler } from './alerts.controller.js';
+import { acknowledgeAlertHandler, listAlertsHandler, unacknowledgeAlertHandler } from './alerts.controller.js';
 import { requireRole } from '../../middlewares/requireRole.js';
 import { ACK_ROLES } from '../../lib/rbac.js';
 
@@ -15,4 +15,11 @@ alertsRouter.patch(
   requireRole(...ACK_ROLES),
   validate({ params: alertIdParamSchema }),
   asyncHandler(acknowledgeAlertHandler),
+);
+
+alertsRouter.patch(
+  '/:id/unacknowledge',
+  requireRole(...ACK_ROLES),
+  validate({ params: alertIdParamSchema }),
+  asyncHandler(unacknowledgeAlertHandler),
 );
