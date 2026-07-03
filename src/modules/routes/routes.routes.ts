@@ -15,11 +15,13 @@ import {
   listRoutesHandler,
   routesSummaryHandler,
   updateRouteHandler,
+  updateRouteImageHandler,
 } from './routes.controller.js';
 import { createStopSchema } from '../stops/stops.schema.js';
 import { createStopHandler } from '../stops/stops.controller.js';
 import { requireRole } from '../../middlewares/requireRole.js';
 import { WRITE_ROLES } from '../../lib/rbac.js';
+import { uploadImageMiddleware } from '../../middlewares/upload.js';
 
 export const routesRouter: Router = Router();
 
@@ -57,4 +59,11 @@ routesRouter.delete(
   requireRole(...WRITE_ROLES),
   validate({ params: routeCodeParamSchema }),
   asyncHandler(deleteRouteHandler),
+);
+routesRouter.post(
+  '/:code/image',
+  requireRole(...WRITE_ROLES),
+  validate({ params: routeCodeParamSchema }),
+  uploadImageMiddleware.single('image'),
+  asyncHandler(updateRouteImageHandler),
 );

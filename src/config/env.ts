@@ -18,6 +18,10 @@ const envSchema = z.object({
   COOKIE_SECRET: z.string().min(16).optional(),
   TELEMETRY_SIM: z.enum(['true', 'false']).default('false'),
   TELEMETRY_SIM_INTERVAL_MS: z.coerce.number().int().positive().default(3000),
+
+  CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
+  CLOUDINARY_API_KEY: z.string().min(1).optional(),
+  CLOUDINARY_API_SECRET: z.string().min(1).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

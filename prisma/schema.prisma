@@ -83,6 +83,7 @@ model Route {
   frequencyMinutes Int
   busesAssigned    Int        @default(0)
   state            RouteState @default(Activa)
+  imageUrl         String?
 
   stops    Stop[]
   vehicles Vehicle[] @relation("VehicleCurrentRoute")

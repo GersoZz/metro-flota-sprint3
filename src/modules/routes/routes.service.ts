@@ -13,6 +13,7 @@ import {
   routeTypeToDisplay,
 } from '../../lib/domainEnums.js';
 import { AppError } from '../../lib/AppError.js';
+import { uploadImage } from '../../lib/cloudinary.js';
 import type { CreateRouteBody, ListRoutesQuery, UpdateRouteBody } from './routes.schema.js';
 
 type RouteRow = Prisma.RouteGetPayload<{ include: { _count: { select: { stops: true } } } }>;
@@ -26,6 +27,7 @@ export interface RouteDTO {
   frequencyMinutes: number;
   buses: number;
   state: string;
+  imageUrl: string | null;
 }
 
 function toRouteDTO(r: RouteRow): RouteDTO {
@@ -38,6 +40,7 @@ function toRouteDTO(r: RouteRow): RouteDTO {
     frequencyMinutes: r.frequencyMinutes,
     buses: r.busesAssigned,
     state: routeStateToDisplay[r.state],
+    imageUrl: r.imageUrl,
   };
 }
 
@@ -129,6 +132,7 @@ export async function getRoute(code: string): Promise<RouteDetailDTO> {
     frequencyMinutes: route.frequencyMinutes,
     buses: route.busesAssigned,
     state: routeStateToDisplay[route.state],
+    imageUrl: route.imageUrl,
     stops: route.stops.map(toStopDTO),
   };
 }
@@ -179,4 +183,18 @@ export async function updateRoute(code: string, body: UpdateRouteBody): Promise<
 
 export async function deleteRoute(code: string): Promise<void> {
   await prisma.route.delete({ where: { code } });
+}
+
+export async function updateRouteImage(code: string, file: Buffer): Promise<RouteDTO> {
+  const route = await prisma.route.findUnique({ where: { code }, select: { code: true } });
+  if (!route) throw AppError.notFound(`Ruta no encontrada: ${code}`);
+
+  const imageUrl = await uploadImage(file, 'metroflota/routes');
+
+  const updated = await prisma.route.update({
+    where: { code },
+    data: { imageUrl },
+    include: { _count: { select: { stops: true } } },
+  });
+  return toRouteDTO(updated);
 }

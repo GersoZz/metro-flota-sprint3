@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { AppError } from '../../lib/AppError.js';
 import {
   createRoute,
   deleteRoute,
@@ -7,6 +8,7 @@ import {
   getRoutesSummary,
   listRoutes,
   updateRoute,
+  updateRouteImage,
 } from './routes.service.js';
 import type { CreateRouteBody, ListRoutesQuery, UpdateRouteBody } from './routes.schema.js';
 
@@ -44,4 +46,10 @@ export async function deleteRouteHandler(req: Request, res: Response): Promise<v
   const { code } = req.valid!.params as { code: string };
   await deleteRoute(code);
   res.status(204).end();
+}
+
+export async function updateRouteImageHandler(req: Request, res: Response): Promise<void> {
+  const { code } = req.valid!.params as { code: string };
+  if (!req.file) throw AppError.badRequest('Falta el archivo de imagen (campo "image")');
+  res.json(await updateRouteImage(code, req.file.buffer));
 }
