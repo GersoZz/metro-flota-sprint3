@@ -1,15 +1,4 @@
-import { pino } from 'pino';
-import { env, isProduction, isTest } from '../config/env.js';
+import type { Logger as PinoLogger } from 'pino';
+import { AppLogger } from './AppLogger.js';
 
-export const logger = pino({
-  level: isTest ? 'silent' : (process.env.LOG_LEVEL ?? 'info'),
-  ...(isProduction
-    ? {}
-    : {
-        transport: {
-          target: 'pino-pretty',
-          options: { colorize: true, translateTime: 'SYS:HH:MM:ss', ignore: 'pid,hostname' },
-        },
-      }),
-  base: { env: env.NODE_ENV },
-});
+export const logger: PinoLogger = AppLogger.get().pino;

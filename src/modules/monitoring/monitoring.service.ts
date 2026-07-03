@@ -1,10 +1,8 @@
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../lib/AppError.js';
-
-export interface MonitoringUnit {
-  id: string;
-  label: string;
-}
+import { unitStatusFactory } from './UnitStatusFactory.js';
+import type { MonitoringUnit, VehicleStatusDTO } from './monitoring.types.js';
+export type { MonitoringUnit, VehicleStatusDTO } from './monitoring.types.js';
 
 export async function listUnits(): Promise<MonitoringUnit[]> {
   const units = await prisma.vehicle.findMany({
@@ -15,17 +13,6 @@ export async function listUnits(): Promise<MonitoringUnit[]> {
   return units.map((u) => ({ id: u.id, label: u.id }));
 }
 
-export interface VehicleStatusDTO {
-  unitId: string;
-  speedKmh: number;
-  driver: string | null;
-  passengers: number;
-  capacity: number;
-  nextStop: string | null;
-  routeCode: string | null;
-  position: { lat: number; lng: number };
-}
-
 export async function getUnitStatus(id: string): Promise<VehicleStatusDTO> {
   const status = await prisma.vehicleStatus.findFirst({
     where: { vehicleId: id },
@@ -34,16 +21,7 @@ export async function getUnitStatus(id: string): Promise<VehicleStatusDTO> {
   });
   if (!status) throw AppError.notFound(`Unidad sin telemetría: ${id}`);
 
-  return {
-    unitId: status.vehicleId,
-    speedKmh: status.speedKmh,
-    driver: status.driver?.name ?? null,
-    passengers: status.passengers,
-    capacity: status.capacity,
-    nextStop: status.nextStop?.name ?? null,
-    routeCode: status.vehicle.currentRouteCode,
-    position: { lat: Number(status.lat), lng: Number(status.lng) },
-  };
+  return unitStatusFactory.create(status);
 }
 
 async function latestStatusOrThrow(id: string) {
