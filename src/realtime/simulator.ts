@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { telemetryBus } from './TelemetryBus.js';
 import { getUnitStatus } from '../modules/monitoring/monitoring.service.js';
+import { generateAlertsForVehicle } from '../modules/monitoring/alertGenerator.js';
 
 const STEP = 0.25;
 const ARRIVAL_EPS = 0.0005;
@@ -65,6 +66,9 @@ export async function tickUnit(unitId: string): Promise<boolean> {
   if (telemetryBus.hasObservers(unitId)) {
     telemetryBus.publish(unitId, await getUnitStatus(unitId));
   }
+
+  // Revisa las reglas del RF-14 y crea alertas automaticas si corresponde.
+  await generateAlertsForVehicle(unitId);
   return true;
 }
 
