@@ -6,6 +6,7 @@ import {
   listMaintenance,
   updateMaintenance,
 } from './maintenance.service.js';
+import { generateMaintenanceAlerts } from './maintenanceAlerts.js';
 import type {
   CreateMaintenanceBody,
   ListMaintenanceQuery,
@@ -37,4 +38,11 @@ export async function deleteMaintenanceHandler(req: Request, res: Response): Pro
   const { id } = req.valid!.params as { id: string };
   await deleteMaintenance(id);
   res.status(204).send();
+}
+
+// Revisa los mantenimientos programados y crea alertas de los que estan cerca
+// de su umbral de km o de fecha (RF-18).
+export async function checkMaintenanceAlertsHandler(_req: Request, res: Response): Promise<void> {
+  const created = await generateMaintenanceAlerts(new Date());
+  res.json({ created });
 }

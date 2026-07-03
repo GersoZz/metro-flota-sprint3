@@ -10,6 +10,7 @@ import {
   updateMaintenanceSchema,
 } from './maintenance.schema.js';
 import {
+  checkMaintenanceAlertsHandler,
   createMaintenanceHandler,
   deleteMaintenanceHandler,
   getMaintenanceHandler,
@@ -23,6 +24,12 @@ maintenanceRouter.get(
   '/',
   validate({ query: listMaintenanceQuerySchema }),
   asyncHandler(listMaintenanceHandler),
+);
+
+maintenanceRouter.post(
+  '/check-alerts',
+  requireRole(...WRITE_ROLES),
+  asyncHandler(checkMaintenanceAlertsHandler),
 );
 
 maintenanceRouter.get(
