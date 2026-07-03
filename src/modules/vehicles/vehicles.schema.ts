@@ -7,6 +7,7 @@ export const listVehiclesQuerySchema = paginationQuerySchema.extend({
   state: z.enum(vehicleStateDisplays as [string, ...string[]]).optional(),
   type: z.enum(vehicleTypeDisplays as [string, ...string[]]).optional(),
   consortium: z.string().trim().min(1).optional(),
+  route: z.string().trim().min(1).optional(),
 });
 
 export type ListVehiclesQuery = z.infer<typeof listVehiclesQuerySchema>;

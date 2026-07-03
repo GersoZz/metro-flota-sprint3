@@ -42,6 +42,16 @@ export class ConsortiumFilter implements VehicleFilter {
   }
 }
 
+// Filtra exacto por ruta actual asignada
+export class RouteFilter implements VehicleFilter {
+  applies(q: ListVehiclesQuery): boolean {
+    return Boolean(q.route);
+  }
+  toCondition(q: ListVehiclesQuery): Prisma.VehicleWhereInput {
+    return { currentRouteCode: q.route };
+  }
+}
+
 // Filtra texto libre sobre placa/id/consorcio, y enums de state/type si coinciden.
 export class SearchFilter implements VehicleFilter {
   applies(q: ListVehiclesQuery): boolean {
@@ -69,5 +79,6 @@ export const vehicleFilters = new FilterContext<ListVehiclesQuery, Prisma.Vehicl
   new StateFilter(),
   new TypeFilter(),
   new ConsortiumFilter(),
+  new RouteFilter(),
   new SearchFilter(),
 ]);
