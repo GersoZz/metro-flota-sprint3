@@ -35,6 +35,12 @@ const drivers = [
   { name: 'Juan Pérez', licenseNumber: '12345-A' },
   { name: 'Ana Torres', licenseNumber: '55678-B' },
   { name: 'Luis Ramírez', licenseNumber: '33456-D' },
+  { name: 'Carla Mendoza', licenseNumber: '77213-E' },
+  { name: 'Miguel Ángel Rojas', licenseNumber: '90341-F' },
+  { name: 'Fiorella Castillo', licenseNumber: '24567-G' },
+  { name: 'Jorge Huamán', licenseNumber: '61829-H' },
+  { name: 'Patricia Vega', licenseNumber: '38904-I' },
+  { name: 'Diego Flores', licenseNumber: '15702-J' },
 ];
 
 const vehicleRows = [
@@ -46,6 +52,7 @@ const vehicleRows = [
     km: '145,230 km',
     state: 'Operativo',
     date: '12/10/2023',
+    routeCode: 'TR-A',
   },
   {
     plate: 'B4C-129',
@@ -55,6 +62,7 @@ const vehicleRows = [
     km: '89,450 km',
     state: 'En Taller',
     date: '24/10/2023',
+    routeCode: 'AL-12',
   },
   {
     plate: 'C1P-882',
@@ -64,6 +72,7 @@ const vehicleRows = [
     km: '210,050 km',
     state: 'Alerta',
     date: '05/06/2023',
+    routeCode: 'TR-B',
   },
   {
     plate: 'D3K-504',
@@ -73,6 +82,7 @@ const vehicleRows = [
     km: '98,120 km',
     state: 'Operativo',
     date: '02/02/2024',
+    routeCode: 'TR-A',
   },
   {
     plate: 'E7H-219',
@@ -82,6 +92,7 @@ const vehicleRows = [
     km: '76,880 km',
     state: 'Operativo',
     date: '19/01/2024',
+    routeCode: 'AL-18',
   },
   {
     plate: 'F9M-640',
@@ -91,6 +102,7 @@ const vehicleRows = [
     km: '182,400 km',
     state: 'En Taller',
     date: '11/11/2023',
+    routeCode: 'TR-C',
   },
   {
     plate: 'G2B-071',
@@ -100,6 +112,7 @@ const vehicleRows = [
     km: '54,300 km',
     state: 'Operativo',
     date: '27/02/2024',
+    routeCode: 'AL-12',
   },
   {
     plate: 'H8L-389',
@@ -109,6 +122,7 @@ const vehicleRows = [
     km: '165,700 km',
     state: 'Operativo',
     date: '08/03/2024',
+    routeCode: 'EX-1',
   },
   {
     plate: 'I5Q-227',
@@ -118,6 +132,7 @@ const vehicleRows = [
     km: '112,950 km',
     state: 'Alerta',
     date: '14/07/2023',
+    routeCode: 'AL-18',
   },
   {
     plate: 'J1N-914',
@@ -127,6 +142,7 @@ const vehicleRows = [
     km: '203,480 km',
     state: 'En Taller',
     date: '22/09/2023',
+    routeCode: 'EX-4',
   },
   {
     plate: 'K6R-558',
@@ -136,6 +152,7 @@ const vehicleRows = [
     km: '68,200 km',
     state: 'Operativo',
     date: '05/03/2024',
+    routeCode: 'AL-12',
   },
   {
     plate: 'L4S-083',
@@ -145,6 +162,7 @@ const vehicleRows = [
     km: '134,650 km',
     state: 'Operativo',
     date: '17/12/2023',
+    routeCode: 'TR-B',
   },
   {
     plate: 'M2T-462',
@@ -154,6 +172,7 @@ const vehicleRows = [
     km: '45,800 km',
     state: 'Operativo',
     date: '30/03/2024',
+    routeCode: 'AL-18',
   },
   {
     plate: 'N7V-701',
@@ -163,6 +182,7 @@ const vehicleRows = [
     km: '221,900 km',
     state: 'Alerta',
     date: '10/05/2023',
+    routeCode: 'EX-1',
   },
   {
     plate: 'O9W-135',
@@ -172,6 +192,237 @@ const vehicleRows = [
     km: '81,400 km',
     state: 'Operativo',
     date: '25/01/2024',
+    routeCode: 'AL-12',
+  },
+  {
+    plate: 'P3X-816',
+    id: 'ART-2340',
+    type: 'Bus Articulado',
+    consortium: 'Lima Vías Express',
+    km: '192,300 km',
+    state: 'Operativo',
+    date: '14/04/2024',
+    routeCode: 'TR-A',
+  },
+  {
+    plate: 'Q8Y-457',
+    id: 'ALI-529',
+    type: 'Alimentador',
+    consortium: 'Transvial Lima',
+    km: '39,650 km',
+    state: 'Operativo',
+    date: '02/05/2024',
+    routeCode: 'AL-18',
+  },
+  {
+    plate: 'R5Z-993',
+    id: 'ART-2456',
+    type: 'Bus Articulado',
+    consortium: 'Perú Masivo',
+    km: '175,020 km',
+    state: 'En Taller',
+    date: '19/03/2024',
+    routeCode: 'TR-B',
+  },
+  {
+    plate: 'S2A-620',
+    id: 'ALI-681',
+    type: 'Alimentador',
+    consortium: 'Lima Vías Express',
+    km: '58,470 km',
+    state: 'Alerta',
+    date: '30/01/2024',
+    routeCode: 'AL-12',
+  },
+  {
+    plate: 'T6B-348',
+    id: 'ART-2589',
+    type: 'Bus Articulado',
+    consortium: 'Lima Vías Express',
+    km: '201,150 km',
+    state: 'Operativo',
+    date: '07/06/2024',
+    routeCode: 'TR-C',
+  },
+  {
+    plate: 'U1C-772',
+    id: 'ALI-736',
+    type: 'Alimentador',
+    consortium: 'Transvial Lima',
+    km: '64,900 km',
+    state: 'Operativo',
+    date: '21/02/2024',
+    routeCode: 'AL-18',
+  },
+  {
+    plate: 'V4D-105',
+    id: 'ART-2601',
+    type: 'Bus Articulado',
+    consortium: 'Perú Masivo',
+    km: '188,730 km',
+    state: 'En Taller',
+    date: '13/12/2023',
+    routeCode: 'TR-C',
+  },
+  {
+    plate: 'W7E-289',
+    id: 'ALI-812',
+    type: 'Alimentador',
+    consortium: 'Lima Vías Express',
+    km: '47,220 km',
+    state: 'Operativo',
+    date: '09/05/2024',
+    routeCode: 'AL-18',
+  },
+  {
+    plate: 'X2F-534',
+    id: 'ART-2718',
+    type: 'Bus Articulado',
+    consortium: 'Transvial Lima',
+    km: '215,600 km',
+    state: 'Alerta',
+    date: '28/08/2023',
+    routeCode: 'EX-1',
+  },
+  {
+    plate: 'Y9G-861',
+    id: 'ALI-903',
+    type: 'Alimentador',
+    consortium: 'Lima Vías Express',
+    km: '71,340 km',
+    state: 'Operativo',
+    date: '16/04/2024',
+    routeCode: 'AL-12',
+  },
+  {
+    plate: 'Z5H-407',
+    id: 'ART-2833',
+    type: 'Bus Articulado',
+    consortium: 'Transvial Lima',
+    km: '159,880 km',
+    state: 'Operativo',
+    date: '04/07/2024',
+    routeCode: 'EX-4',
+  },
+  {
+    plate: 'A8J-216',
+    id: 'ALI-964',
+    type: 'Alimentador',
+    consortium: 'Perú Masivo',
+    km: '33,510 km',
+    state: 'Operativo',
+    date: '22/06/2024',
+    routeCode: 'AL-12',
+  },
+  {
+    plate: 'B3K-670',
+    id: 'ART-2945',
+    type: 'Bus Articulado',
+    consortium: 'Transvial Lima',
+    km: '197,240 km',
+    state: 'En Taller',
+    date: '11/01/2024',
+    routeCode: 'TR-A',
+  },
+  {
+    plate: 'C7L-390',
+    id: 'ART-3010',
+    type: 'Bus Articulado',
+    consortium: 'Perú Masivo',
+    km: '142,880 km',
+    state: 'Operativo',
+    date: '05/08/2024',
+    routeCode: 'TR-B',
+  },
+  {
+    plate: 'D2M-517',
+    id: 'ALI-1021',
+    type: 'Alimentador',
+    consortium: 'Lima Vías Express',
+    km: '28,340 km',
+    state: 'Operativo',
+    date: '19/09/2024',
+    routeCode: 'AL-18',
+  },
+  {
+    plate: 'E9N-742',
+    id: 'ART-3128',
+    type: 'Bus Articulado',
+    consortium: 'Transvial Lima',
+    km: '167,510 km',
+    state: 'Operativo',
+    date: '02/07/2024',
+    routeCode: 'TR-C',
+  },
+  {
+    plate: 'F4P-268',
+    id: 'ALI-1145',
+    type: 'Alimentador',
+    consortium: 'Perú Masivo',
+    km: '51,690 km',
+    state: 'En Taller',
+    date: '14/10/2024',
+    routeCode: 'AL-12',
+  },
+  {
+    plate: 'G8Q-903',
+    id: 'ART-3247',
+    type: 'Bus Articulado',
+    consortium: 'Lima Vías Express',
+    km: '183,220 km',
+    state: 'Operativo',
+    date: '27/06/2024',
+    routeCode: 'TR-A',
+  },
+  {
+    plate: 'H1R-456',
+    id: 'ALI-1289',
+    type: 'Alimentador',
+    consortium: 'Transvial Lima',
+    km: '19,870 km',
+    state: 'Operativo',
+    date: '08/11/2024',
+    routeCode: 'AL-18',
+  },
+  {
+    plate: 'I6S-834',
+    id: 'ART-3356',
+    type: 'Bus Articulado',
+    consortium: 'Perú Masivo',
+    km: '204,600 km',
+    state: 'Alerta',
+    date: '30/05/2024',
+    routeCode: 'TR-B',
+  },
+  {
+    plate: 'J3T-621',
+    id: 'ALI-1372',
+    type: 'Alimentador',
+    consortium: 'Lima Vías Express',
+    km: '43,120 km',
+    state: 'Operativo',
+    date: '22/10/2024',
+    routeCode: 'AL-12',
+  },
+  {
+    plate: 'K7U-158',
+    id: 'ART-3489',
+    type: 'Bus Articulado',
+    consortium: 'Transvial Lima',
+    km: '156,340 km',
+    state: 'Operativo',
+    date: '15/09/2024',
+    routeCode: 'EX-4',
+  },
+  {
+    plate: 'L2V-970',
+    id: 'ALI-1503',
+    type: 'Alimentador',
+    consortium: 'Perú Masivo',
+    km: '35,780 km',
+    state: 'Operativo',
+    date: '01/12/2024',
+    routeCode: 'AL-18',
   },
 ];
 
@@ -435,6 +686,7 @@ async function main(): Promise<void> {
       state: vehicleState[v.state as keyof typeof vehicleState],
       lastInspectionDate: parseDmy(v.date),
       consortiumId: consortiumId.get(v.consortium)!,
+      currentRouteCode: v.routeCode,
     };
     await prisma.vehicle.upsert({
       where: { id: v.id },
@@ -447,6 +699,8 @@ async function main(): Promise<void> {
   const monitored = [
     { id: 'U-4022', plate: 'MON-4022', km: 158_000, routeCode: 'MET-A' },
     { id: 'U-208', plate: 'MON-0208', km: 96_500, routeCode: 'MET-B' },
+    { id: 'U-3311', plate: 'MON-3311', km: 121_400, routeCode: 'MET-A' },
+    { id: 'U-1587', plate: 'MON-1587', km: 84_900, routeCode: 'MET-B' },
   ];
   for (const m of monitored) {
     const data = {
@@ -473,6 +727,10 @@ async function main(): Promise<void> {
   const metaNext = await stopFor('MET-A', 3); // Pacífico
   const metbPos = await stopFor('MET-B', 2); // Los Incas
   const metbNext = await stopFor('MET-B', 3); // Andrés Belaunde
+  const meta2Pos = await stopFor('MET-A', 9); // UNI
+  const meta2Next = await stopFor('MET-A', 10); // Parque del Trabajo
+  const metb2Pos = await stopFor('MET-B', 12); // Tomás Valle
+  const metb2Next = await stopFor('MET-B', 13); // El Milagro
 
   const statuses = [
     {
@@ -496,6 +754,28 @@ async function main(): Promise<void> {
       nextStopId: metbNext?.id ?? null,
       lat: Number(metbPos?.lat ?? -11.91545),
       lng: Number(metbPos?.lng ?? -77.04805),
+    },
+    {
+      id: 'seed-st-U-3311',
+      vehicleId: 'U-3311',
+      driverId: driverId.get('77213-E')!,
+      speedKmh: 38,
+      capacity: 160,
+      passengers: Math.round(0.4 * 160),
+      nextStopId: meta2Next?.id ?? null,
+      lat: Number(meta2Pos?.lat ?? -12.0242),
+      lng: Number(meta2Pos?.lng ?? -77.04887),
+    },
+    {
+      id: 'seed-st-U-1587',
+      vehicleId: 'U-1587',
+      driverId: driverId.get('90341-F')!,
+      speedKmh: 0,
+      capacity: 120,
+      passengers: Math.round(0.8 * 120),
+      nextStopId: metb2Next?.id ?? null,
+      lat: Number(metb2Pos?.lat ?? -12.00615),
+      lng: Number(metb2Pos?.lng ?? -77.05405),
     },
   ];
   for (const s of statuses) {
@@ -532,26 +812,100 @@ async function main(): Promise<void> {
       routeCode: null,
       createdAt: minutesAgo(45),
     },
+    {
+      id: 'seed-alert-4',
+      title: 'Mantenimiento programado',
+      text: 'Unidad ART-2456 ingresó a taller por mantenimiento preventivo.',
+      tone: 'warning' as const,
+      vehicleId: 'ART-2456',
+      routeCode: null,
+      createdAt: minutesAgo(60),
+      acknowledgedAt: minutesAgo(50),
+    },
+    {
+      id: 'seed-alert-5',
+      title: 'Sobreocupación',
+      text: 'Unidad U-208 supera el 95% de su capacidad en hora punta.',
+      tone: 'warning' as const,
+      vehicleId: 'U-208',
+      routeCode: 'MET-B',
+      createdAt: minutesAgo(20),
+    },
+    {
+      id: 'seed-alert-6',
+      title: 'Falla de frenos',
+      text: 'Unidad ART-2601 reporta alerta de freno de disco.',
+      tone: 'danger' as const,
+      vehicleId: 'ART-2601',
+      routeCode: null,
+      createdAt: minutesAgo(90),
+      acknowledgedAt: minutesAgo(70),
+    },
+    {
+      id: 'seed-alert-7',
+      title: 'Congestión vial',
+      text: 'Tráfico intenso en Ruta B altura Ramón Castilla, retraso est. 10 min.',
+      tone: 'warning' as const,
+      vehicleId: null,
+      routeCode: 'TR-B',
+      createdAt: minutesAgo(8),
+    },
+    {
+      id: 'seed-alert-8',
+      title: 'Neumático dañado',
+      text: 'Unidad X2F-534 reporta pinchazo, requiere asistencia.',
+      tone: 'danger' as const,
+      vehicleId: 'ART-2718',
+      routeCode: null,
+      createdAt: minutesAgo(35),
+    },
+    {
+      id: 'seed-alert-9',
+      title: 'Revisión completada',
+      text: 'Unidad ALI-736 concluyó revisión técnica sin observaciones.',
+      tone: 'warning' as const,
+      vehicleId: 'ALI-736',
+      routeCode: null,
+      createdAt: minutesAgo(120),
+      acknowledgedAt: minutesAgo(100),
+    },
   ];
   for (const a of alerts) {
     const { id, ...rest } = a;
-    await prisma.alert.upsert({ where: { id }, update: rest, create: { id, ...rest } });
+    await prisma.alert.upsert({
+      where: { id },
+      update: { ...rest, acknowledgedAt: rest.acknowledgedAt ?? null },
+      create: { id, ...rest },
+    });
   }
 
-  // Usuario admin
+  // Usuarios (uno por rol, + el admin configurable por env)
   const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@metroflota.gob.pe';
   const adminPassword = process.env.ADMIN_PASSWORD ?? 'admin1234';
-  const passwordHash = await hashPassword(adminPassword);
-  await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: { passwordHash },
-    create: {
-      name: 'Administrador',
-      email: adminEmail,
-      passwordHash,
-      role: 'admin',
+
+  const seedUsers = [
+    { name: 'Administrador', email: adminEmail, password: adminPassword, role: 'admin' as const },
+    {
+      name: 'Operador Base',
+      email: 'operador@metroflota.gob.pe',
+      password: 'operador1234',
+      role: 'operador' as const,
     },
-  });
+    {
+      name: 'Supervisor Base',
+      email: 'supervisor@metroflota.gob.pe',
+      password: 'supervisor1234',
+      role: 'supervisor' as const,
+    },
+  ];
+  for (const u of seedUsers) {
+    const passwordHash = await hashPassword(u.password);
+    await prisma.user.upsert({
+      where: { email: u.email },
+      update: { passwordHash },
+      create: { name: u.name, email: u.email, passwordHash, role: u.role },
+    });
+  }
 
   const counts = {
     consortiums: await prisma.consortium.count(),
