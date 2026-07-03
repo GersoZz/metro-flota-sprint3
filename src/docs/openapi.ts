@@ -36,6 +36,7 @@ export const openapiDocument = {
     { name: 'Alertas', description: 'Feed de alertas' },
     { name: 'Dashboard', description: 'Analítica del inicio' },
     { name: 'Monitoreo', description: 'Telemetría y tiempo real' },
+    { name: 'GTFS', description: 'Exportación de datos en formato GTFS' },
   ],
   security: bearer,
   paths: {
@@ -287,6 +288,19 @@ export const openapiDocument = {
         },
       },
     },
+    '/gtfs/export': {
+      get: {
+        tags: ['GTFS'],
+        summary: 'Exporta el feed GTFS (RF-24)',
+        description:
+          'Devuelve los archivos del feed GTFS (agency, routes, stops, trips, stop_times) ' +
+          'en formato CSV, uno por campo. Se arma con datos reales de rutas y paradas.',
+        responses: {
+          200: { description: 'Feed GTFS', content: { 'application/json': { schema: { $ref: '#/components/schemas/GtfsFeed' } } } },
+          401: errorResponse('No autenticado'),
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -306,6 +320,17 @@ export const openapiDocument = {
       Meta: {
         type: 'object',
         properties: { total: { type: 'integer' }, page: { type: 'integer' }, pageSize: { type: 'integer' } },
+      },
+      GtfsFeed: {
+        type: 'object',
+        description: 'Cada campo es un archivo del feed GTFS en formato CSV.',
+        properties: {
+          'agency.txt': { type: 'string' },
+          'routes.txt': { type: 'string' },
+          'stops.txt': { type: 'string' },
+          'trips.txt': { type: 'string' },
+          'stop_times.txt': { type: 'string' },
+        },
       },
       LoginRequest: {
         type: 'object',

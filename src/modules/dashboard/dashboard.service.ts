@@ -1,10 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
-import { routeStateToDisplay } from '../../lib/domainEnums.js';
 import type { AvailabilityQuery, DashboardAlertsQuery } from './dashboard.schema.js';
 
 const round1 = (n: number): number => Math.round(n * 10) / 10;
-const codeHash = (s: string): number =>
-  [...s].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
 
 export interface Kpi {
   title: string;
@@ -49,17 +46,33 @@ const WEEK_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const MONTH_WEEKS = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'];
 
 export async function getAvailability(query: AvailabilityQuery): Promise<AvailabilityPoint[]> {
-  const [total, enTaller] = await Promise.all([
-    prisma.vehicle.count(),
-    prisma.vehicle.count({ where: { state: 'EnTaller' } }),
-  ]);
-  const baseAvailable = total ? ((total - enTaller) / total) * 100 : 0;
-
   const labels = query.range === 'month' ? MONTH_WEEKS : WEEK_DAYS;
+  const buckets = labels.length;
+
+  // Reparte las alertas de mantenimiento reales por periodo para estimar
+  // cuantos buses estuvieron en taller cada dia o semana.
+  const total = await prisma.vehicle.count();
+  const alerts = await prisma.alert.findMany({
+    where: { title: 'Unidad detenida' },
+    select: { createdAt: true },
+  });
+
+  const inShop = new Array<number>(buckets).fill(0);
+  for (const a of alerts) {
+    const idx =
+      query.range === 'month'
+        ? Math.min(buckets - 1, Math.floor((a.createdAt.getDate() - 1) / 7))
+        : a.createdAt.getDay() === 0
+          ? 6
+          : a.createdAt.getDay() - 1;
+    inShop[idx] = (inShop[idx] ?? 0) + 1;
+  }
+
   return labels.map((label, i) => {
-    const variation = ((i * 7) % 11) - 5; // -5..+5 determinista
-    const operativa = Math.max(0, Math.min(100, round1(baseAvailable + variation)));
-    return { day: label, operativa, mantenimiento: round1(100 - operativa) };
+    const count = inShop[i] ?? 0;
+    const mant = total ? round1(Math.min(100, (count / total) * 100)) : 0;
+    const operativa = round1(100 - mant);
+    return { day: label, operativa, mantenimiento: mant };
   });
 }
 
@@ -69,19 +82,22 @@ export interface RouteCompliancePoint {
   color: string;
 }
 
-const COMPLIANCE_BY_STATE: Record<keyof typeof routeStateToDisplay, number> = {
-  Activa: 95,
-  EnRevision: 78,
-  Suspendida: 45,
-};
-
+// Cumplimiento real por ruta: buses operativos en la ruta sobre los buses
+// asignados a esa ruta. Si una ruta no tiene buses asignados, se toma 0.
 export async function getRouteCompliance(): Promise<RouteCompliancePoint[]> {
   const routes = await prisma.route.findMany({ orderBy: { code: 'asc' } });
-  return routes.map((r) => {
-    const value = Math.max(0, Math.min(100, COMPLIANCE_BY_STATE[r.state] + (codeHash(r.code) % 5) - 2));
-    const color = value >= 90 ? '#0f172a' : value >= 70 ? '#d4a15d' : '#b91c1c';
-    return { name: r.code, value, color };
-  });
+
+  return Promise.all(
+    routes.map(async (r) => {
+      const running = await prisma.vehicle.count({
+        where: { currentRouteCode: r.code, state: 'Operativo' },
+      });
+      const required = r.busesAssigned > 0 ? r.busesAssigned : running;
+      const value = required > 0 ? round1(Math.min(100, (running / required) * 100)) : 0;
+      const color = value >= 90 ? '#0f172a' : value >= 70 ? '#d4a15d' : '#b91c1c';
+      return { name: r.code, value, color };
+    }),
+  );
 }
 
 export interface RecentAlert {
