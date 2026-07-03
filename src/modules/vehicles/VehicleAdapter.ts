@@ -16,6 +16,7 @@ export class VehicleAdapter implements ApiResource<VehicleDTO> {
       km: v.km,
       state: vehicleStateToDisplay[v.state], // BD -> display API ("EnTaller" -> "En taller")
       lastInspectionDate: v.lastInspectionDate.toISOString().slice(0, 10), // Date -> YYYY-MM-DD
+      currentRouteCode: v.currentRouteCode,
     };
   }
 }

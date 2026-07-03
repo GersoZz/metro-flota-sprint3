@@ -12,4 +12,5 @@ export interface VehicleDTO {
   km: number;
   state: string;
   lastInspectionDate: string;
+  currentRouteCode: string | null;
 }
