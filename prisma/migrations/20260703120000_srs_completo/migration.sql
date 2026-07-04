@@ -7,12 +7,6 @@ CREATE TYPE "DayType" AS ENUM ('Laborable', 'Sábado', 'Domingo');
 -- CreateEnum
 CREATE TYPE "TimeBand" AS ENUM ('Pico Mañana', 'Pico Tarde', 'Valle', 'Baja');
 
--- CreateEnum
-CREATE TYPE "MaintenanceType" AS ENUM ('Preventivo', 'Correctivo');
-
--- CreateEnum
-CREATE TYPE "MaintenanceStatus" AS ENUM ('Programado', 'En Curso', 'Completado');
-
 -- AlterEnum
 ALTER TYPE "VehicleState" ADD VALUE 'Dado de Baja';
 
@@ -44,26 +38,6 @@ CREATE TABLE "frequency_bands" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "frequency_bands_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "maintenances" (
-    "id" TEXT NOT NULL,
-    "type" "MaintenanceType" NOT NULL,
-    "status" "MaintenanceStatus" NOT NULL DEFAULT 'Programado',
-    "description" TEXT NOT NULL,
-    "thresholdKm" INTEGER,
-    "scheduledDate" DATE,
-    "executedDate" DATE,
-    "components" TEXT,
-    "costEstimate" DECIMAL(10,2),
-    "hours" DECIMAL(6,2),
-    "technician" TEXT,
-    "vehicleId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "maintenances_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -101,12 +75,6 @@ CREATE INDEX "frequency_bands_routeCode_idx" ON "frequency_bands"("routeCode");
 CREATE UNIQUE INDEX "frequency_bands_routeCode_dayType_timeBand_key" ON "frequency_bands"("routeCode", "dayType", "timeBand");
 
 -- CreateIndex
-CREATE INDEX "maintenances_vehicleId_createdAt_idx" ON "maintenances"("vehicleId", "createdAt" DESC);
-
--- CreateIndex
-CREATE INDEX "maintenances_status_idx" ON "maintenances"("status");
-
--- CreateIndex
 CREATE INDEX "audit_logs_userId_idx" ON "audit_logs"("userId");
 
 -- CreateIndex
@@ -123,9 +91,6 @@ CREATE UNIQUE INDEX "route_versions_routeCode_version_key" ON "route_versions"("
 
 -- AddForeignKey
 ALTER TABLE "frequency_bands" ADD CONSTRAINT "frequency_bands_routeCode_fkey" FOREIGN KEY ("routeCode") REFERENCES "routes"("code") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "maintenances" ADD CONSTRAINT "maintenances_vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES "vehicles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
