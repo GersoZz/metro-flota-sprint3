@@ -294,3 +294,23 @@ model AuditLog {
   @@index([createdAt(sort: Desc)])
   @@map("audit_logs")
 }
+
+// Guarda una copia de la ruta cada vez que se edita (RF-11).
+// Permite ver el historial de versiones de una ruta y sus frecuencias.
+model RouteVersion {
+  id        String @id @default(uuid())
+  routeCode String
+  version   Int
+
+  name             String
+  type             RouteType
+  lengthKm         Decimal @db.Decimal(6, 2)
+  frequencyMinutes Int
+  state            RouteState
+
+  createdAt DateTime @default(now())
+
+  @@unique([routeCode, version])
+  @@index([routeCode, version(sort: Desc)])
+  @@map("route_versions")
+}

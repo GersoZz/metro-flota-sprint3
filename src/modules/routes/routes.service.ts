@@ -173,12 +173,65 @@ export async function updateRoute(code: string, body: UpdateRouteBody): Promise<
     data.state = routeStateFromDisplay[body.state as keyof typeof routeStateFromDisplay];
   }
 
-  const updated = await prisma.route.update({
-    where: { code },
-    data,
-    include: { _count: { select: { stops: true } } },
+  // Guardamos una copia del estado actual como version antes de aplicar el cambio (RF-11).
+  // Todo va en una transaccion para que la version y la actualizacion sean atomicas.
+  const updated = await prisma.$transaction(async (tx) => {
+    const current = await tx.route.findUnique({ where: { code } });
+    if (!current) throw AppError.notFound(`Ruta no encontrada: ${code}`);
+
+    const lastVersion = await tx.routeVersion.findFirst({
+      where: { routeCode: code },
+      orderBy: { version: 'desc' },
+      select: { version: true },
+    });
+    const nextVersion = (lastVersion?.version ?? 0) + 1;
+
+    await tx.routeVersion.create({
+      data: {
+        routeCode: code,
+        version: nextVersion,
+        name: current.name,
+        type: current.type,
+        lengthKm: current.lengthKm,
+        frequencyMinutes: current.frequencyMinutes,
+        state: current.state,
+      },
+    });
+
+    return tx.route.update({
+      where: { code },
+      data,
+      include: { _count: { select: { stops: true } } },
+    });
   });
   return toRouteDTO(updated);
+}
+
+export interface RouteVersionDTO {
+  version: number;
+  name: string;
+  type: string;
+  lengthKm: number;
+  frequencyMinutes: number;
+  state: string;
+  createdAt: string;
+}
+
+// Devuelve el historial de versiones de una ruta, de la mas reciente a la mas antigua (RF-11).
+export async function listRouteVersions(code: string): Promise<RouteVersionDTO[]> {
+  const rows = await prisma.routeVersion.findMany({
+    where: { routeCode: code },
+    orderBy: { version: 'desc' },
+  });
+  return rows.map((r) => ({
+    version: r.version,
+    name: r.name,
+    type: r.type,
+    lengthKm: Number(r.lengthKm),
+    frequencyMinutes: r.frequencyMinutes,
+    state: r.state,
+    createdAt: r.createdAt.toISOString(),
+  }));
 }
 
 export async function deleteRoute(code: string): Promise<void> {

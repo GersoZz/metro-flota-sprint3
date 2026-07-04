@@ -12,6 +12,7 @@ import {
   deleteRouteHandler,
   getRouteHandler,
   getRouteStopsHandler,
+  getRouteVersionsHandler,
   listRoutesHandler,
   routesSummaryHandler,
   updateRouteHandler,
@@ -41,6 +42,11 @@ routesRouter.get(
   '/:code/stops',
   validate({ params: routeCodeParamSchema }),
   asyncHandler(getRouteStopsHandler),
+);
+routesRouter.get(
+  '/:code/versions',
+  validate({ params: routeCodeParamSchema }),
+  asyncHandler(getRouteVersionsHandler),
 );
 routesRouter.post(
   '/:code/stops',
