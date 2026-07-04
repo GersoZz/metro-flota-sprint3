@@ -37,6 +37,10 @@ export const openapiDocument = {
     { name: 'Dashboard', description: 'Analítica del inicio' },
     { name: 'Monitoreo', description: 'Telemetría y tiempo real' },
     { name: 'GTFS', description: 'Exportación de datos en formato GTFS' },
+    { name: 'Asignación', description: 'Asignación de vehículos y conductores a rutas' },
+    { name: 'Simulación', description: 'Simulación de escenarios de operación' },
+    { name: 'Reportes', description: 'Reportes operativos y de mantenimiento' },
+    { name: 'Auditoría', description: 'Registro de auditoría del sistema' },
   ],
   security: bearer,
   paths: {
@@ -308,6 +312,27 @@ export const openapiDocument = {
           401: errorResponse('No autenticado'),
         },
       },
+    },
+    '/assignment/conflicts': {
+      get: { tags: ['Asignación'], summary: 'Lista conflictos de asignación detectados', responses: { 200: { description: 'Conflictos' }, 401: errorResponse('No autenticado') } },
+    },
+    '/assignment': {
+      post: { tags: ['Asignación'], summary: 'Asigna un vehículo y conductor a una ruta', responses: { 200: { description: 'Asignación creada' }, 400: errorResponse('Datos inválidos'), 401: errorResponse('No autenticado'), 403: errorResponse('Sin permisos') } },
+    },
+    '/simulation/scenario': {
+      post: { tags: ['Simulación'], summary: 'Simula un escenario y calcula headway y espera promedio', responses: { 200: { description: 'Resultado de la simulación' }, 400: errorResponse('Datos inválidos'), 401: errorResponse('No autenticado'), 403: errorResponse('Sin permisos') } },
+    },
+    '/reports/daily': {
+      get: { tags: ['Reportes'], summary: 'Reporte diario de operación (RF-22)', description: 'Acepta ?date=YYYY-MM-DD y ?format=csv.', responses: { 200: { description: 'Reporte diario' }, 401: errorResponse('No autenticado') } },
+    },
+    '/reports/monthly': {
+      get: { tags: ['Reportes'], summary: 'Reporte mensual de mantenimiento (RF-23)', description: 'Acepta ?month=YYYY-MM y ?format=csv.', responses: { 200: { description: 'Reporte mensual' }, 401: errorResponse('No autenticado') } },
+    },
+    '/reports/recurring-failures': {
+      get: { tags: ['Reportes'], summary: 'Reporte de fallas recurrentes (RF-21)', description: 'Acepta ?format=csv.', responses: { 200: { description: 'Fallas recurrentes' }, 401: errorResponse('No autenticado') } },
+    },
+    '/audit': {
+      get: { tags: ['Auditoría'], summary: 'Lista el registro de auditoría (RF-29, solo admin)', responses: { 200: { description: 'Entradas de auditoría' }, 401: errorResponse('No autenticado'), 403: errorResponse('Sin permisos') } },
     },
   },
   components: {
