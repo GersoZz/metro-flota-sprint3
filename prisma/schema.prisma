@@ -15,8 +15,31 @@ enum VehicleType {
 
 enum VehicleState {
   Operativo
-  EnTaller  @map("En Taller")
+  EnTaller     @map("En Taller")
   Alerta
+  DadoDeBaja   @map("Dado de Baja")
+}
+
+// Tipo de combustible del vehiculo (RF-01).
+enum FuelType {
+  Diesel
+  GNV
+  Electrico @map("Eléctrico")
+}
+
+// Tipo de dia para las franjas de frecuencia (RF-07).
+enum DayType {
+  Laborable
+  Sabado    @map("Sábado")
+  Domingo
+}
+
+// Franja horaria de una frecuencia (RF-07).
+enum TimeBand {
+  PicoManana @map("Pico Mañana")
+  PicoTarde  @map("Pico Tarde")
+  Valle
+  Baja
 }
 
 enum RouteType {
@@ -40,6 +63,9 @@ enum UserRole {
   admin
   operador
   supervisor
+  planificador
+  jefe_mantenimiento
+  directivo
 }
 
 enum MaintenanceType {
@@ -69,6 +95,11 @@ model Vehicle {
   state              VehicleState @default(Operativo)
   lastInspectionDate DateTime     @db.Date
 
+  // Datos adicionales de la unidad (RF-01).
+  capacity Int?
+  year     Int?
+  fuelType FuelType?
+
   consortiumId String
   consortium   Consortium @relation(fields: [consortiumId], references: [id])
 
@@ -97,9 +128,10 @@ model Route {
   state            RouteState @default(Activa)
   imageUrl         String?
 
-  stops    Stop[]
-  vehicles Vehicle[] @relation("VehicleCurrentRoute")
-  alerts   Alert[]
+  stops          Stop[]
+  vehicles       Vehicle[]        @relation("VehicleCurrentRoute")
+  alerts         Alert[]
+  frequencyBands FrequencyBand[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -107,6 +139,25 @@ model Route {
   @@index([state])
   @@index([type])
   @@map("routes")
+}
+
+// Frecuencia de una ruta segun tipo de dia y franja horaria (RF-07).
+// Route.frequencyMinutes se conserva por compatibilidad.
+model FrequencyBand {
+  id              String   @id @default(uuid())
+  dayType         DayType
+  timeBand        TimeBand
+  intervalMinutes Int
+
+  routeCode String
+  route     Route  @relation(fields: [routeCode], references: [code], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([routeCode, dayType, timeBand])
+  @@index([routeCode])
+  @@map("frequency_bands")
 }
 
 model Stop {
@@ -216,8 +267,30 @@ model User {
   passwordHash String
   role         UserRole @default(operador)
 
+  auditLogs AuditLog[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+// Registro de auditoria de operaciones de escritura (RF-29).
+// El middleware que lo llena lo agrega otro modulo; aca solo el modelo.
+model AuditLog {
+  id       String @id @default(uuid())
+  action   String
+  entity   String
+  entityId String?
+  detail   String?
+
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity])
+  @@index([createdAt(sort: Desc)])
+  @@map("audit_logs")
 }

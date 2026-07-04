@@ -1,5 +1,9 @@
 import type { ApiResource } from '../../lib/ApiResource.js';
-import { vehicleStateToDisplay, vehicleTypeToDisplay } from '../../lib/domainEnums.js';
+import {
+  fuelTypeToDisplay,
+  vehicleStateToDisplay,
+  vehicleTypeToDisplay,
+} from '../../lib/domainEnums.js';
 import type { VehicleDTO, VehicleRow } from './vehicles.types.js';
 
 // Rol Adapter: traduce la respuesta de la BD (Adaptee) a la interfaz de la API (Target).
@@ -17,6 +21,9 @@ export class VehicleAdapter implements ApiResource<VehicleDTO> {
       state: vehicleStateToDisplay[v.state], // BD -> display API ("EnTaller" -> "En taller")
       lastInspectionDate: v.lastInspectionDate.toISOString().slice(0, 10), // Date -> YYYY-MM-DD
       currentRouteCode: v.currentRouteCode,
+      capacity: v.capacity,
+      year: v.year,
+      fuelType: v.fuelType ? fuelTypeToDisplay[v.fuelType] : null, // BD -> display API
     };
   }
 }
