@@ -1,0 +1,38 @@
+# Levanta la base de datos y el backend juntos (RD-03 del SRS).
+# Uso: docker compose up --build
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: metroflota
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/metroflota?schema=public
+      JWT_ACCESS_SECRET: cambiar-en-produccion-min-32-caracteres-largo
+      JWT_REFRESH_SECRET: cambiar-en-produccion-otro-secreto-largo-32
+      COOKIE_SECRET: cambiar-en-produccion-cookie
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - "3000:3000"
+
+volumes:
+  db_data:
