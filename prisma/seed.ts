@@ -10,6 +10,7 @@ const vehicleState = {
   Operativo: 'Operativo',
   'En Taller': 'EnTaller',
   Alerta: 'Alerta',
+  'Dado de Baja': 'DadoDeBaja',
 } as const;
 
 const routeState = {
@@ -27,6 +28,15 @@ const parseDmy = (s: string): Date => {
   return new Date(Date.UTC(y, m - 1, d));
 };
 const minutesAgo = (n: number): Date => new Date(Date.now() - n * 60_000);
+const daysAgo = (n: number): Date => new Date(Date.now() - n * 86_400_000);
+const daysFromNow = (n: number): Date => new Date(Date.now() + n * 86_400_000);
+
+// Combustible por consorcio (RF-01): cada operador estandarizó su flota.
+const fuelByConsortium = {
+  'Lima Vías Express': 'Diesel',
+  'Transvial Lima': 'GNV',
+  'Perú Masivo': 'Electrico',
+} as const;
 
 const consortiums = ['Lima Vías Express', 'Transvial Lima', 'Perú Masivo'];
 
@@ -679,19 +689,50 @@ async function main(): Promise<void> {
 
   // Vehículos
   for (const v of vehicleRows) {
+    const type = vehicleType[v.type as keyof typeof vehicleType];
+    // capacity/year derivados del tipo y del número de unidad para no listarlos a mano
+    const unitNumber = Number(v.id.replace(/\D/g, ''));
     const data = {
       plate: v.plate,
-      type: vehicleType[v.type as keyof typeof vehicleType],
+      type,
       km: parseKm(v.km),
       state: vehicleState[v.state as keyof typeof vehicleState],
       lastInspectionDate: parseDmy(v.date),
       consortiumId: consortiumId.get(v.consortium)!,
       currentRouteCode: v.routeCode,
+      capacity: type === 'BusArticulado' ? 160 : 80,
+      year: 2015 + (unitNumber % 10),
+      fuelType: fuelByConsortium[v.consortium as keyof typeof fuelByConsortium],
     };
     await prisma.vehicle.upsert({
       where: { id: v.id },
       update: data,
       create: { id: v.id, ...data },
+    });
+  }
+
+  // Unidades dadas de baja (RF-05): fuera de servicio, sin ruta asignada
+  const retired = [
+    { id: 'ART-0901', plate: 'AAB-901', km: 412_300, date: '03/03/2019', year: 2009 },
+    { id: 'ALI-0117', plate: 'AAC-117', km: 355_940, date: '18/08/2020', year: 2011 },
+  ];
+  for (const r of retired) {
+    const data = {
+      plate: r.plate,
+      type: r.id.startsWith('ART') ? ('BusArticulado' as const) : ('Alimentador' as const),
+      km: r.km,
+      state: 'DadoDeBaja' as const,
+      lastInspectionDate: parseDmy(r.date),
+      consortiumId: consortiumId.get('Lima Vías Express')!,
+      currentRouteCode: null,
+      capacity: r.id.startsWith('ART') ? 160 : 80,
+      year: r.year,
+      fuelType: 'Diesel' as const,
+    };
+    await prisma.vehicle.upsert({
+      where: { id: r.id },
+      update: data,
+      create: { id: r.id, ...data },
     });
   }
 
@@ -711,6 +752,9 @@ async function main(): Promise<void> {
       lastInspectionDate: parseDmy('15/02/2024'),
       consortiumId: consortiumId.get('Lima Vías Express')!,
       currentRouteCode: m.routeCode,
+      capacity: 160,
+      year: 2021,
+      fuelType: 'Diesel' as const,
     };
     await prisma.vehicle.upsert({
       where: { id: m.id },
@@ -879,6 +923,153 @@ async function main(): Promise<void> {
     });
   }
 
+  // Mantenimientos (RF-17 a RF-21)
+  // Incluye casos que disparan la alerta de umbral (RF-18: a <=5000 km o <=7 días)
+  // y fallas repetidas para el reporte de recurrentes (RF-21).
+  const maintenances = [
+    {
+      // Cerca por km: ART-1042 tiene 145,230 km y el umbral es 148,000 -> genera alerta
+      id: 'seed-mnt-1',
+      vehicleId: 'ART-1042',
+      type: 'Preventivo' as const,
+      status: 'Programado' as const,
+      description: 'Cambio de aceite y filtros por kilometraje',
+      thresholdKm: 148_000,
+    },
+    {
+      // Cerca por fecha: programado a 3 días -> genera alerta
+      id: 'seed-mnt-2',
+      vehicleId: 'U-4022',
+      type: 'Preventivo' as const,
+      status: 'Programado' as const,
+      description: 'Revisión técnica semestral',
+      scheduledDate: daysFromNow(3),
+    },
+    {
+      // Lejos por km: no genera alerta (caso de control)
+      id: 'seed-mnt-3',
+      vehicleId: 'ART-3489',
+      type: 'Preventivo' as const,
+      status: 'Programado' as const,
+      description: 'Mantenimiento mayor de motor',
+      thresholdKm: 175_000,
+    },
+    {
+      id: 'seed-mnt-4',
+      vehicleId: 'ART-2456',
+      type: 'Correctivo' as const,
+      status: 'EnCurso' as const,
+      description: 'Reparación de caja de cambios',
+      components: 'Caja de cambios, embrague',
+      technician: 'Taller Central - E. Quispe',
+    },
+    {
+      // Coincide con seed-alert-6 (falla de frenos de ART-2601)
+      id: 'seed-mnt-5',
+      vehicleId: 'ART-2601',
+      type: 'Correctivo' as const,
+      status: 'EnCurso' as const,
+      description: 'Cambio de discos y pastillas de freno',
+      components: 'Discos de freno, pastillas',
+      costEstimate: 3800,
+      technician: 'Taller Norte - R. Paredes',
+    },
+    {
+      // Completado con datos de ejecución (RF-19); coincide con seed-alert-9
+      id: 'seed-mnt-6',
+      vehicleId: 'ALI-736',
+      type: 'Preventivo' as const,
+      status: 'Completado' as const,
+      description: 'Revisión técnica anual',
+      scheduledDate: daysAgo(12),
+      executedDate: daysAgo(10),
+      components: 'Filtros, correas, luces',
+      costEstimate: 1250.5,
+      hours: 6.5,
+      technician: 'Taller Central - M. Soto',
+    },
+    {
+      // Falla recurrente 1/2: misma descripción en el mismo vehículo (RF-21)
+      id: 'seed-mnt-7',
+      vehicleId: 'ART-2015',
+      type: 'Correctivo' as const,
+      status: 'Completado' as const,
+      description: 'Falla en sistema eléctrico',
+      executedDate: daysAgo(45),
+      components: 'Alternador',
+      costEstimate: 2100,
+      hours: 8,
+      technician: 'Taller Sur - J. Medina',
+    },
+    {
+      // Falla recurrente 2/2
+      id: 'seed-mnt-8',
+      vehicleId: 'ART-2015',
+      type: 'Correctivo' as const,
+      status: 'Completado' as const,
+      description: 'Falla en sistema eléctrico',
+      executedDate: daysAgo(6),
+      components: 'Batería, cableado de tablero',
+      costEstimate: 1650,
+      hours: 5,
+      technician: 'Taller Sur - J. Medina',
+    },
+    {
+      id: 'seed-mnt-9',
+      vehicleId: 'ALI-802',
+      type: 'Correctivo' as const,
+      status: 'EnCurso' as const,
+      description: 'Reparación de suspensión trasera',
+      components: 'Amortiguadores, bujes',
+      technician: 'Taller Norte - R. Paredes',
+    },
+  ];
+  for (const m of maintenances) {
+    const { id, ...rest } = m;
+    await prisma.maintenance.upsert({ where: { id }, update: rest, create: { id, ...rest } });
+  }
+
+  // Franjas de frecuencia por ruta (RF-07)
+  const bands = [
+    { dayType: 'Laborable' as const, timeBand: 'PicoManana' as const, factor: 1 },
+    { dayType: 'Laborable' as const, timeBand: 'Valle' as const, factor: 2 },
+    { dayType: 'Laborable' as const, timeBand: 'PicoTarde' as const, factor: 1 },
+    { dayType: 'Laborable' as const, timeBand: 'Baja' as const, factor: 3 },
+    { dayType: 'Sabado' as const, timeBand: 'Valle' as const, factor: 2 },
+    { dayType: 'Domingo' as const, timeBand: 'Valle' as const, factor: 3 },
+  ];
+  const bandRoutes = ['TR-A', 'TR-B', 'MET-A', 'AL-12'];
+  for (const routeCode of bandRoutes) {
+    const base = routeRows.find((r) => r.code === routeCode)
+      ? parseFreq(routeRows.find((r) => r.code === routeCode)!.frequency)
+      : 5;
+    for (const b of bands) {
+      const intervalMinutes = base * b.factor;
+      await prisma.frequencyBand.upsert({
+        where: {
+          routeCode_dayType_timeBand: { routeCode, dayType: b.dayType, timeBand: b.timeBand },
+        },
+        update: { intervalMinutes },
+        create: { routeCode, dayType: b.dayType, timeBand: b.timeBand, intervalMinutes },
+      });
+    }
+  }
+
+  // Historial de versiones (RF-11): TR-C ya pasó por una edición
+  await prisma.routeVersion.upsert({
+    where: { routeCode_version: { routeCode: 'TR-C', version: 1 } },
+    update: {},
+    create: {
+      routeCode: 'TR-C',
+      version: 1,
+      name: 'Ruta C — Izaguirre ↔ Plaza de Flores',
+      type: 'Troncal',
+      lengthKm: 17.4,
+      frequencyMinutes: 6,
+      state: 'Activa',
+    },
+  });
+
   // Usuarios (uno por rol, + el admin configurable por env)
   const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@metroflota.gob.pe';
   const adminPassword = process.env.ADMIN_PASSWORD ?? 'admin1234';
@@ -897,14 +1088,69 @@ async function main(): Promise<void> {
       password: 'supervisor1234',
       role: 'supervisor' as const,
     },
+    {
+      name: 'Planificador Base',
+      email: 'planificador@metroflota.gob.pe',
+      password: 'planificador1234',
+      role: 'planificador' as const,
+    },
+    {
+      name: 'Jefe de Mantenimiento',
+      email: 'mantenimiento@metroflota.gob.pe',
+      password: 'mantenimiento1234',
+      role: 'jefe_mantenimiento' as const,
+    },
+    {
+      name: 'Directivo Base',
+      email: 'directivo@metroflota.gob.pe',
+      password: 'directivo1234',
+      role: 'directivo' as const,
+    },
   ];
+  const userId = new Map<string, string>();
   for (const u of seedUsers) {
     const passwordHash = await hashPassword(u.password);
-    await prisma.user.upsert({
+    const created = await prisma.user.upsert({
       where: { email: u.email },
-      update: { passwordHash },
+      update: { passwordHash, role: u.role },
       create: { name: u.name, email: u.email, passwordHash, role: u.role },
     });
+    userId.set(u.email, created.id);
+  }
+
+  // Registros de auditoría de ejemplo (RF-29); el resto los genera el middleware
+  const auditRows = [
+    {
+      id: 'seed-audit-1',
+      action: 'CREATE',
+      entity: 'maintenance',
+      entityId: 'seed-mnt-1',
+      detail: 'POST /api/v1/maintenance',
+      userId: userId.get('mantenimiento@metroflota.gob.pe')!,
+      createdAt: daysAgo(2),
+    },
+    {
+      id: 'seed-audit-2',
+      action: 'UPDATE',
+      entity: 'routes',
+      entityId: 'TR-C',
+      detail: 'PATCH /api/v1/routes/TR-C',
+      userId: userId.get('planificador@metroflota.gob.pe')!,
+      createdAt: daysAgo(1),
+    },
+    {
+      id: 'seed-audit-3',
+      action: 'UPDATE',
+      entity: 'alerts',
+      entityId: 'seed-alert-4',
+      detail: 'PATCH /api/v1/alerts/seed-alert-4/acknowledge',
+      userId: userId.get('supervisor@metroflota.gob.pe')!,
+      createdAt: minutesAgo(50),
+    },
+  ];
+  for (const a of auditRows) {
+    const { id, ...rest } = a;
+    await prisma.auditLog.upsert({ where: { id }, update: rest, create: { id, ...rest } });
   }
 
   const counts = {
@@ -915,6 +1161,10 @@ async function main(): Promise<void> {
     vehicles: await prisma.vehicle.count(),
     statuses: await prisma.vehicleStatus.count(),
     alerts: await prisma.alert.count(),
+    maintenances: await prisma.maintenance.count(),
+    frequencyBands: await prisma.frequencyBand.count(),
+    routeVersions: await prisma.routeVersion.count(),
+    auditLogs: await prisma.auditLog.count(),
     users: await prisma.user.count(),
   };
   console.log('Seed completado:', counts);
