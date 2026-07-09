@@ -13,4 +13,7 @@ export interface VehicleDTO {
   state: string;
   lastInspectionDate: string;
   currentRouteCode: string | null;
+  capacity: number | null;
+  year: number | null;
+  fuelType: string | null;
 }

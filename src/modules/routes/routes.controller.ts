@@ -6,6 +6,7 @@ import {
   getRoute,
   getRouteStops,
   getRoutesSummary,
+  listRouteVersions,
   listRoutes,
   updateRoute,
   updateRouteImage,
@@ -29,6 +30,11 @@ export async function getRouteHandler(req: Request, res: Response): Promise<void
 export async function getRouteStopsHandler(req: Request, res: Response): Promise<void> {
   const { code } = req.valid!.params as { code: string };
   res.json(await getRouteStops(code));
+}
+
+export async function getRouteVersionsHandler(req: Request, res: Response): Promise<void> {
+  const { code } = req.valid!.params as { code: string };
+  res.json(await listRouteVersions(code));
 }
 
 export async function createRouteHandler(req: Request, res: Response): Promise<void> {

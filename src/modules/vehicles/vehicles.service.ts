@@ -7,6 +7,7 @@ import {
   type Pagination,
 } from '../../lib/pagination.js';
 import {
+  fuelTypeFromDisplay,
   vehicleStateFromDisplay,
   vehicleTypeFromDisplay,
 } from '../../lib/domainEnums.js';
@@ -65,6 +66,11 @@ export async function createVehicle(body: CreateVehicleBody): Promise<VehicleDTO
       km: body.km,
       lastInspectionDate: body.lastInspectionDate,
       currentRouteCode: body.currentRouteCode ?? null,
+      capacity: body.capacity ?? null,
+      year: body.year ?? null,
+      fuelType: body.fuelType
+        ? fuelTypeFromDisplay[body.fuelType as keyof typeof fuelTypeFromDisplay]
+        : null,
       consortiumId,
     },
     include: { consortium: true },
@@ -90,6 +96,11 @@ export async function updateVehicle(id: string, body: UpdateVehicleBody): Promis
 
     data.state = vehicleStateFromDisplay[body.state as keyof typeof vehicleStateFromDisplay];
   }
+  if (body.capacity !== undefined) data.capacity = body.capacity;
+  if (body.year !== undefined) data.year = body.year;
+  if (body.fuelType !== undefined) {
+    data.fuelType = fuelTypeFromDisplay[body.fuelType as keyof typeof fuelTypeFromDisplay];
+  }
   if (body.currentRouteCode !== undefined) {
     data.currentRoute = body.currentRouteCode
       ? { connect: { code: body.currentRouteCode } }
@@ -107,6 +118,13 @@ export async function updateVehicle(id: string, body: UpdateVehicleBody): Promis
   return vehicleFactory.create(updated);
 }
 
+// Baja logica (RF-05): no borra el registro, solo lo marca como DadoDeBaja.
 export async function deleteVehicle(id: string): Promise<void> {
-  await prisma.vehicle.delete({ where: { id } });
+  const current = await prisma.vehicle.findUnique({ where: { id }, select: { id: true } });
+  if (!current) throw AppError.notFound(`Unidad no encontrada: ${id}`);
+
+  await prisma.vehicle.update({
+    where: { id },
+    data: { state: vehicleStateFromDisplay['Dado de Baja'] },
+  });
 }

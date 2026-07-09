@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { paginationQuerySchema } from '../../lib/pagination.js';
-import { vehicleStateDisplays, vehicleTypeDisplays } from '../../lib/domainEnums.js';
+import {
+  fuelTypeDisplays,
+  vehicleStateDisplays,
+  vehicleTypeDisplays,
+} from '../../lib/domainEnums.js';
 
 export const listVehiclesQuerySchema = paginationQuerySchema.extend({
   search: z.string().trim().min(1).optional(),
@@ -14,6 +18,7 @@ export type ListVehiclesQuery = z.infer<typeof listVehiclesQuerySchema>;
 
 const typeEnum = z.enum(vehicleTypeDisplays as [string, ...string[]]);
 const stateEnum = z.enum(vehicleStateDisplays as [string, ...string[]]);
+const fuelEnum = z.enum(fuelTypeDisplays as [string, ...string[]]);
 
 export const vehicleIdParamSchema = z.object({
   id: z.string().trim().min(1),
@@ -28,6 +33,9 @@ export const createVehicleSchema = z.object({
   state: stateEnum.default('Operativo'),
   lastInspectionDate: z.coerce.date(),
   currentRouteCode: z.string().trim().min(1).nullable().optional(),
+  capacity: z.number().int().positive().optional(),
+  year: z.number().int().min(1990).optional(),
+  fuelType: fuelEnum.optional(),
 });
 
 export const updateVehicleSchema = z
@@ -39,6 +47,9 @@ export const updateVehicleSchema = z
     state: stateEnum,
     lastInspectionDate: z.coerce.date(),
     currentRouteCode: z.string().trim().min(1).nullable(),
+    capacity: z.number().int().positive(),
+    year: z.number().int().min(1990),
+    fuelType: fuelEnum,
   })
   .partial();
 

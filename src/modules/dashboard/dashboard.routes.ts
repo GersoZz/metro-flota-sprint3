@@ -6,6 +6,7 @@ import {
   availabilityHandler,
   dashboardAlertsHandler,
   kpisHandler,
+  adherenceHandler,
   routeComplianceHandler,
 } from './dashboard.controller.js';
 
@@ -18,6 +19,7 @@ dashboardRouter.get(
   asyncHandler(availabilityHandler),
 );
 dashboardRouter.get('/route-compliance', asyncHandler(routeComplianceHandler));
+dashboardRouter.get('/adherence', asyncHandler(adherenceHandler));
 dashboardRouter.get(
   '/alerts',
   validate({ query: dashboardAlertsQuerySchema }),

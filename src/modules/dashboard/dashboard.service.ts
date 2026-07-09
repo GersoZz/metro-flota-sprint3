@@ -100,6 +100,30 @@ export async function getRouteCompliance(): Promise<RouteCompliancePoint[]> {
   );
 }
 
+export interface AdherencePoint {
+  routeCode: string;
+  scheduled: number;
+  running: number;
+  adherence: number;
+}
+
+// Panel de adherencia (RF-15): por cada ruta compara los buses programados
+// (busesAssigned) contra los que estan realmente en operacion.
+export async function getAdherence(): Promise<AdherencePoint[]> {
+  const routes = await prisma.route.findMany({ orderBy: { code: 'asc' } });
+
+  return Promise.all(
+    routes.map(async (r) => {
+      const running = await prisma.vehicle.count({
+        where: { currentRouteCode: r.code, state: 'Operativo' },
+      });
+      const scheduled = r.busesAssigned;
+      const adherence = scheduled > 0 ? round1(Math.min(100, (running / scheduled) * 100)) : 0;
+      return { routeCode: r.code, scheduled, running, adherence };
+    }),
+  );
+}
+
 export interface RecentAlert {
   id: string;
   title: string;

@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import {
+  getAdherence,
   getAvailability,
   getKpis,
   getRecentAlerts,
@@ -18,6 +19,10 @@ export async function availabilityHandler(req: Request, res: Response): Promise<
 
 export async function routeComplianceHandler(_req: Request, res: Response): Promise<void> {
   res.json(await getRouteCompliance());
+}
+
+export async function adherenceHandler(_req: Request, res: Response): Promise<void> {
+  res.json(await getAdherence());
 }
 
 export async function dashboardAlertsHandler(req: Request, res: Response): Promise<void> {
